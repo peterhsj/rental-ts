@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="mdi-qrcode" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
+  <!-- Generator: Adobe Illustrator 30.0.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 123)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #fff;
+      }
+    </style>
+  </defs>
+  <path class="st0" d="M3,11h2v2h-2v-2M11,5h2v4h-2v-4M9,11h4v4h-2v-2h-2v-2M15,11h2v2h2v-2h2v2h-2v2h2v4h-2v2h-2v-2h-4v2h-2v-4h4v-2h2v-2h-2v-2M19,19v-4h-2v4h2M15,3h6v6h-6V3M17,5v2h2v-2h-2M3,3h6v6H3V3M5,5v2h2v-2h-2M3,15h6v6H3v-6M5,17v2h2v-2h-2Z"/>
+</svg>
