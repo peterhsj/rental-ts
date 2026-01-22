@@ -4,19 +4,19 @@
  * Framework documentation: https://vuetifyjs.com`
  */
 
-// Styles
-import '@mdi/font/css/materialdesignicons.css'
-import 'vuetify/styles'
-import '@fortawesome/fontawesome-free/css/all.css'
-
+import DateFnsAdapter from '@date-io/date-fns'
+import { zhTW } from 'date-fns/locale'
 // Composables
 import { createVuetify } from 'vuetify'
+
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { fa } from 'vuetify/iconsets/fa'
 import { VDateInput } from 'vuetify/labs/VDateInput'
-import DateFnsAdapter from "@date-io/date-fns"
-import { zhTW } from 'date-fns/locale'
+// Styles
+import '@mdi/font/css/materialdesignicons.css'
+import 'vuetify/styles'
+import '@fortawesome/fontawesome-free/css/all.css'
 
 import 'unfonts.css'
 
@@ -24,7 +24,7 @@ import 'unfonts.css'
 export default createVuetify({
   components: {
     ...components,
-    VDateInput
+    VDateInput,
   },
   directives,
   date: {
@@ -34,8 +34,8 @@ export default createVuetify({
   icons: {
     defaultSet: 'mdi',
     sets: {
-      fa
-    }
+      fa,
+    },
   },
   theme: {
     defaultTheme: 'light',

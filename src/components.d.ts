@@ -12,8 +12,22 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    Captcha: typeof import('./components/Captcha.vue')['default']
+    ChangePassword: typeof import('./components/ChangePassword.vue')['default']
+    CheckinForm: typeof import('./components/counter/CheckinForm.vue')['default']
+    CommonOverlay: typeof import('./components/CommonOverlay.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
+    InfoView: typeof import('./components/InfoView.vue')['default']
+    LoginView: typeof import('./components/LoginView.vue')['default']
+    Logout: typeof import('./components/Logout.vue')['default']
+    ParkingDeduction: typeof import('./components/shop/ParkingDeduction.vue')['default']
+    ParkingInfo: typeof import('./components/parking/ParkingInfo.vue')['default']
+    PromptDialog: typeof import('./components/PromptDialog.vue')['default']
+    QrCode: typeof import('./components/banquet/QrCode.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchForm: typeof import('./components/banquet/SearchForm.vue')['default']
+    SelfCheckinForm: typeof import('./components/counter/SelfCheckinForm.vue')['default']
+    TabList: typeof import('./components/TabList.vue')['default']
   }
 }
