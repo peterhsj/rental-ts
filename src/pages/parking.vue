@@ -42,7 +42,7 @@
       />
     </v-container>
     <!-- 訊息 -->
-    <infoView
+    <InfoView
       v-if="isInfo"
       :info="info"
       :info-status="infoStatus"
@@ -86,13 +86,6 @@
     reserve_end_date: string
   }
 
-  interface ParkingForm {
-    ischeck: number
-    phone: string
-    license_plate: string
-    captcha: string
-  }
-
   const BaseUrl = import.meta.env.VITE_BASE_URL
   const loading = ref<boolean>(false)
   const activeTab = ref<TabItem | null>(null)
@@ -109,6 +102,12 @@
   const searchFormRef = ref<InstanceType<typeof SearchForm>>()
 
   // parking
+  interface ParkingForm {
+    ischeck: number
+    phone: string
+    license_plate: string
+    captcha: string
+  }
   const parkingForm = ref<ParkingForm>({
     ischeck: 0,
     phone: '',
@@ -209,10 +208,14 @@
       const { returnCode, message: returnMsg, data } = res
       console.log('message', returnMsg)
 
-      if (returnCode === 0) {
+      if (returnCode === 0 && data && data.length > 0) {
         // 成功
-        const parkingData = data![0]!
-        const { license_plate, reserve_start_date, reserve_end_date } = parkingData
+        const parkingData = data[0]
+        const {
+          license_plate: returnedLicensePlate,
+          reserve_start_date: returnedStartDate,
+          reserve_end_date: returnedEndDate,
+        } = parkingData
         // 提交 - 已完成登記
         isEdit.value = false
         isInfo.value = true
@@ -224,13 +227,13 @@
           車號
         </p>
         <p class="text-h5 text-amber-darken-3 font-weight-bold my-0">
-          ${license_plate}
+          ${returnedLicensePlate}
         </p>
         <p class="rental__text--h45 text-grey-darken-1 font-weight-bold mt-4">
           停放日期
         </p>
         <p class="text-h5 text-amber-darken-3 font-weight-bold my-0">
-          ${reserve_start_date} ~ ${reserve_end_date}
+          ${returnedStartDate} ~ ${returnedEndDate}
         </p>`
         searchFormRef.value?.initForm()
       } else {

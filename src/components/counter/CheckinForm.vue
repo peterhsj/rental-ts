@@ -1,161 +1,3 @@
-<script setup>
-  import { isAfter, isBefore } from 'date-fns'
-  import { ref } from 'vue'
-  import api from '@/api/index.js'
-  import PromptDialog from '@/components/PromptDialog.vue'
-  import { formatDate } from '@/utils/date'
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    userID: {
-      type: Number,
-      default: 0,
-    },
-  })
-  const emits = defineEmits(['close-form'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
-
-  const loading = ref(false)
-  // checkin
-  const checkinForm = ref({
-    license_plate: '',
-    reserve_start_date: '',
-    reserve_end_date: '',
-    note: '',
-  })
-  const delItem = ref(null)
-  const checkinFormRef = ref()
-  const rules = ref({
-    carRules: [
-      v => !!v || '車號為必填',
-      v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
-    ],
-    startDateRule: [
-      v => !!v || '請選擇起始日期',
-      v => {
-        if (!v || !checkinForm.value.reserve_end_date) return true
-
-        const start = new Date(v)
-        const end = new Date(checkinForm.value.reserve_end_date)
-        if (!start || !end) return true
-        return !isAfter(start, end) || '起始日期不能晚於結束日期'
-      },
-    ],
-    endDateRule: [
-      v => !!v || '請選擇結束日期',
-      v => {
-        if (!v || !checkinForm.value.reserve_start_date) return true
-        const start = new Date(checkinForm.value.reserve_start_date)
-        const end = new Date(v)
-        if (!start || !end) return true
-        return !isBefore(end, start) || '結束日期不能早於起始日期'
-      },
-    ],
-  })
-  const parkingList = ref([])
-
-  // 送出表單
-  async function addParking () {
-    const { valid } = await checkinFormRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-    const { license_plate, reserve_start_date, reserve_end_date, note } = checkinForm.value
-
-    const payload = {
-      license_plate,
-      reserve_start_date: formatDate(reserve_start_date),
-      reserve_end_date: formatDate(reserve_end_date),
-      note,
-    }
-
-    // 檢查重複登記
-    if (parkingList.value.length > 0) {
-      const isDuplicate = parkingList.value.find(p => p.license_plate === license_plate)
-      if (isDuplicate) {
-        messageDialog.value = true
-        messageTitle.value = '無法登記'
-        message.value = `本車號已登記，須先刪除原本登記日期後才能再次申請。`
-        isConfirmBtn.value = false
-        return
-      }
-    }
-    parkingList.value.push(payload)
-    checkinFormRef.value.reset()
-  }
-
-  // 刪除登記車號
-  function delParking (item) {
-    delItem.value = item
-    messageDialog.value = true
-    messageTitle.value = '刪除登記車號'
-    message.value = `確認刪除 ${item.license_plate} 申請車號？`
-    isConfirmBtn.value = true
-  }
-
-  // 刪除登記車號確認
-  function delParkingConfirm () {
-    const index = parkingList.value.findIndex(p => p.id === delItem.value.id)
-    if (index !== -1) {
-      parkingList.value.splice(index, 1)
-    }
-  }
-
-  // 關閉表單
-  async function saveForm () {
-    const payload = {
-      userId: props.userID,
-      reserve: parkingList.value,
-    }
-
-    if (parkingList.value.length === 0) {
-      emits('close-form')
-      return
-    }
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/register_counter?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg } = res
-      if (returnCode === 0) {
-        emits('close-form')
-      } else {
-        // 此車號已登記
-        if (returnCode === -1) {
-          messageTitle.value = '無法登記'
-          message.value = `${returnMsg}`
-          isConfirmBtn.value = false
-          messageDialog.value = true
-        }
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 確認 message
-  function messageConfirm () {
-    messageDialog.value = false
-    delParkingConfirm()
-  }
-  // 離開 message
-  function messageClose () {
-    messageDialog.value = false
-  }
-</script>
-
 <template>
   <div id="checkin" class="h-100">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -291,3 +133,183 @@
     />
   </div>
 </template>
+<script lang="ts" setup>
+  import type { TabItem } from '@/utils/site.ts'
+  import { isAfter, isBefore } from 'date-fns'
+  import { ref } from 'vue'
+  import api from '@/api/index.ts'
+  import PromptDialog from '@/components/PromptDialog.vue'
+  import { formatDate } from '@/utils/date.ts'
+
+  interface CheckinForm {
+    id?: number
+    license_plate: string
+    reserve_start_date: string
+    reserve_end_date: string
+    note: string
+  }
+
+  interface Rules {
+    carRules: Array<(v: any) => boolean | string>
+    startDateRule: Array<(v: any) => boolean | string>
+    endDateRule: Array<(v: any) => boolean | string>
+  }
+
+  interface Payload {
+    license_plate: string
+    reserve_start_date: string
+    reserve_end_date: string
+    note: string
+  }
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object as () => TabItem,
+      default: () => ({}),
+    },
+    userID: {
+      type: Number,
+      default: 0,
+    },
+  })
+  const emits = defineEmits(['close-form'])
+  const BaseUrl = import.meta.env.VITE_BASE_URL
+
+  // Prompt Message Dialog
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
+
+  const loading = ref<boolean>(false)
+  // checkin
+  const checkinForm = ref<CheckinForm>({
+    license_plate: '',
+    reserve_start_date: '',
+    reserve_end_date: '',
+    note: '',
+  })
+  const checkinFormRef = ref()
+  const delItem = ref<CheckinForm | null>(null)
+  const rules = ref<Rules>({
+    carRules: [
+      v => !!v || '車號為必填',
+      v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
+    ],
+    startDateRule: [
+      v => !!v || '請選擇起始日期',
+      v => {
+        if (!v || !checkinForm.value.reserve_end_date) return true
+
+        const start = new Date(v)
+        const end = new Date(checkinForm.value.reserve_end_date)
+        if (!start || !end) return true
+        return !isAfter(start, end) || '起始日期不能晚於結束日期'
+      },
+    ],
+    endDateRule: [
+      v => !!v || '請選擇結束日期',
+      v => {
+        if (!v || !checkinForm.value.reserve_start_date) return true
+        const start = new Date(checkinForm.value.reserve_start_date)
+        const end = new Date(v)
+        if (!start || !end) return true
+        return !isBefore(end, start) || '結束日期不能早於起始日期'
+      },
+    ],
+  })
+  const parkingList = ref<Payload[]>([])
+
+  // 送出表單
+  async function addParking (): Promise<void> {
+    const { valid } = await checkinFormRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+    const { license_plate, reserve_start_date, reserve_end_date, note } = checkinForm.value
+
+    const payload = {
+      license_plate,
+      reserve_start_date: formatDate(reserve_start_date),
+      reserve_end_date: formatDate(reserve_end_date),
+      note,
+    }
+
+    // 檢查重複登記
+    if (parkingList.value.length > 0) {
+      const isDuplicate = parkingList.value.find(p => p.license_plate === license_plate)
+      if (isDuplicate) {
+        messageDialog.value = true
+        messageTitle.value = '無法登記'
+        message.value = `本車號已登記，須先刪除原本登記日期後才能再次申請。`
+        isConfirmBtn.value = false
+        return
+      }
+    }
+    parkingList.value.push(payload)
+    checkinFormRef.value.reset()
+  }
+
+  // 刪除登記車號
+  function delParking (item: CheckinForm): void {
+    delItem.value = item
+    messageDialog.value = true
+    messageTitle.value = '刪除登記車號'
+    message.value = `確認刪除 ${item.license_plate} 申請車號？`
+    isConfirmBtn.value = true
+  }
+
+  // 刪除登記車號確認
+  function delParkingConfirm (): void {
+    console.log('delItem', delItem.value)
+    const index = parkingList.value.findIndex(p => p.license_plate === delItem.value.license_plate)
+    if (index !== -1) {
+      parkingList.value.splice(index, 1)
+    }
+  }
+
+  // 關閉表單
+  async function saveForm (): Promise<void> {
+    const payload = {
+      userId: props.userID,
+      reserve: parkingList.value,
+    }
+
+    if (parkingList.value.length === 0) {
+      emits('close-form')
+      return
+    }
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/register_counter?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg } = res
+      if (returnCode === 0) {
+        emits('close-form')
+      } else {
+        // 此車號已登記
+        if (returnCode === -1) {
+          messageTitle.value = '無法登記'
+          message.value = `${returnMsg}`
+          isConfirmBtn.value = false
+          messageDialog.value = true
+        }
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 確認 message
+  function messageConfirm (): void {
+    messageDialog.value = false
+    delParkingConfirm()
+  }
+  // 離開 message
+  function messageClose (): void {
+    messageDialog.value = false
+  }
+</script>

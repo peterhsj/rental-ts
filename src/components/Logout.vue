@@ -1,17 +1,3 @@
-<script setup>
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-  })
-
-  const emits = defineEmits(['onLogin'])
-</script>
-
 <template>
   <div id="parkingInfo" class="h-100">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -49,7 +35,7 @@
                 color="light-green-darken-2"
                 height="40"
                 variant="flat"
-                @click="emits('onLogin')"
+                @click="emits('on-login')"
               >
                 登入
               </v-btn>
@@ -60,3 +46,18 @@
     </v-card>
   </div>
 </template>
+
+<script lang="ts" setup>
+  import type { TabItem } from '@/utils/site.ts'
+  const BaseUrl = import.meta.env.VITE_BASE_URL
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object as () => TabItem,
+      default: () => ({}),
+    },
+  })
+
+  const emits = defineEmits(['on-login'])
+</script>

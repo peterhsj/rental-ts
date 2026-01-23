@@ -1,15 +1,24 @@
-<script setup>
+<script lang="ts" setup>
   import { ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import api from '@/api'
   import Captcha from '@/components/Captcha.vue'
   import CommonOverlay from '@/components/CommonOverlay.vue'
   import PromptDialog from '@/components/PromptDialog.vue'
+  interface LoginForm {
+    account: string
+    password: string
+    captcha: string
+  }
 
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  // 定義允許的路由類型
+  type HeaderKeys = 'CounterLogin' | 'ShopLogin' | 'BanquetLogin'
+
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   const route = useRoute()
   const router = useRouter()
+  const currentPath = ref<HeaderKeys>('CounterLogin')
 
   // Prompt Message Dialog
   const messageDialog = ref(false)
@@ -17,7 +26,13 @@
   const message = ref('')
   const isConfirmBtn = ref(false)
 
-  const headers = ref({
+  interface HeaderConfig {
+    title: string
+    bgColor: string
+    icon: string
+  }
+
+  const headers: Record<HeaderKeys, HeaderConfig> = {
     CounterLogin: {
       title: '住宿車輛登記 - 登入',
       bgColor: 'bg-grey-lighten-2',
@@ -33,47 +48,57 @@
       bgColor: 'rental__bg--light-orange',
       icon: '/images/scanner.svg',
     },
-  })
-  const loading = ref(false)
-  const currentPath = ref('')
-  const loginFormRef = ref()
-  const loginForm = ref({
+  }
+  const loading = ref<boolean>(false)
+  const loginFormRef = ref<any>()
+  const loginForm = ref<LoginForm>({
     account: '',
     password: '',
     captcha: '',
   })
-  const rules = ref({
+
+  const captchaCode = ref<string>('')
+  const isShowPassword = ref<boolean>(false)
+
+  const rules = {
     accountRules: [
-      v => !!v || '帳號為必填',
+      (v: string) => !!v || '帳號為必填',
     // v => /^[a-zA-Z0-9_]{4,20}$/.test(v) || '請輸入有效的帳號'
     ],
     passwordRules: [
-      v => !!v || '密碼為必填',
+      (v: string) => !!v || '密碼為必填',
     // v => /^[a-zA-Z0-9_]{6,20}$/.test(v) || '請輸入有效的密碼'
     ],
     captchaRules: [
-      v => !!v || '驗證碼為必填',
-      v => v === captchaCode.value || '請輸入有效的驗證碼',
+      (v: string) => !!v || '驗證碼為必填',
+      (v: string) => v === captchaCode.value || '請輸入有效的驗證碼',
     ],
+  }
+
+  const currentHeader = computed(() => {
+    const path = currentPath.value
+    return headers[path] || headers.CounterLogin
   })
-  const isShowPassword = ref(false)
 
   watch(
     () => route.path,
     newPath => {
-      currentPath.value = newPath.slice(1)
+      const pathKey = newPath.slice(1) as HeaderKeys
+      // 驗證 key 是否存在
+      if (pathKey in headers) {
+        currentPath.value = pathKey
+      }
     },
     { immediate: true },
   )
 
   // 接收 Captcha 組件傳來的驗證碼
-  const captchaCode = ref('')
-  function setCaptchaCode (code) {
+  function setCaptchaCode (code: string): void {
     captchaCode.value = code
   }
 
   // 送出表單
-  async function onSendForm () {
+  async function onSendForm (): Promise<void> {
     const { valid } = await loginFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
@@ -126,7 +151,7 @@
   }
 
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 </script>
@@ -134,18 +159,18 @@
 <template>
   <div id="login" class="pa-5 mx-auto h-100 rental rental__wrapper">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
-      <div class="px-4 py-3 d-flex align-center" :class="headers[currentPath].bgColor">
+      <div class="px-4 py-3 d-flex align-center" :class="currentHeader.bgColor">
         <span>
           <v-img
             alt="icon"
             cover
             height="40"
-            :src="`${BaseUrl}${headers[currentPath].icon}`"
+            :src="`${BaseUrl}${currentHeader.icon}`"
             width="45"
           />
         </span>
         <span class="ml-3 text-h6 font-weight-bold text-grey-darken-2">
-          {{ headers[currentPath].title }}
+          {{ currentHeader.title }}
         </span>
       </div>
       <v-form ref="loginFormRef" class="h-100" @submit.prevent="onSendForm">
