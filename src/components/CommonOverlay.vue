@@ -1,12 +1,3 @@
-<script lang="ts" setup>
-  const props = defineProps({
-    overlay: {
-      type: Boolean,
-      default: false,
-    },
-  })
-</script>
-
 <template>
   <v-overlay class="align-center justify-center" :model-value="props.overlay" transition="fade-transition">
     <v-progress-circular
@@ -18,3 +9,11 @@
     />
   </v-overlay>
 </template>
+<script lang="ts" setup>
+  interface Props {
+    overlay?: boolean
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    overlay: false,
+  })
+</script>

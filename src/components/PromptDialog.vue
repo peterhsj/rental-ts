@@ -1,51 +1,3 @@
-<script lang="ts" setup>
-  import { ref, watch } from 'vue'
-  // Props
-  const props = defineProps({
-    messageDialog: {
-      type: Boolean,
-      default: false,
-    },
-    messageTitle: {
-      type: String,
-      default: '提示',
-    },
-    message: {
-      type: String,
-      default: '',
-    },
-    isConfirmBtn: {
-      type: Boolean,
-      default: false,
-    },
-  })
-
-  const show = ref<boolean>(props.messageDialog)
-  watch(
-    (): boolean => props.messageDialog,
-    newVal => {
-      show.value = newVal
-    },
-  )
-  watch(
-    (): boolean => show.value,
-    newVal => {
-      emit('update:messageDialog', newVal)
-    },
-  )
-
-  const emit = defineEmits(['update:messageDialog', 'prompt-confirm', 'on-close'])
-
-  function onClose (): void {
-    show.value = false
-    emit('on-close')
-  }
-
-  function promptConfirm (): void {
-    emit('prompt-confirm')
-    show.value = false
-  }
-</script>
 <template>
   <v-dialog
     v-model="show"
@@ -88,3 +40,44 @@
     </v-card>
   </v-dialog>
 </template>
+<script lang="ts" setup>
+  import { ref, watch } from 'vue'
+  interface Props {
+    messageDialog?: boolean
+    messageTitle?: string
+    message?: string
+    isConfirmBtn?: boolean
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    messageDialog: false,
+    messageTitle: '提示',
+    message: '',
+    isConfirmBtn: false,
+  })
+
+  const show = ref<boolean>(props.messageDialog)
+  watch(
+    () => props.messageDialog,
+    newVal => {
+      show.value = newVal
+    },
+  )
+  watch(
+    () => show.value,
+    newVal => {
+      emit('update:messageDialog', newVal)
+    },
+  )
+
+  const emit = defineEmits(['update:messageDialog', 'prompt-confirm', 'on-close'])
+
+  function onClose (): void {
+    show.value = false
+    emit('on-close')
+  }
+
+  function promptConfirm (): void {
+    emit('prompt-confirm')
+    show.value = false
+  }
+</script>

@@ -1,26 +1,3 @@
-<script lang="ts" setup>
-  const BaseUrl = import.meta.env.VITE_BASE_URL
-  const props = defineProps({
-    info: {
-      type: String,
-      default: '',
-    },
-    infoStatus: {
-      type: String,
-      default: 'success', // 'success' or 'error'
-    },
-  })
-
-  const emits = defineEmits(['info-close', 're-write'])
-
-  function onInfoClose (): void {
-    emits('info-close')
-  }
-  function onReWrite (): void {
-    emits('re-write')
-  }
-</script>
-
 <template>
   <v-container class="rental rental__wrapper flex-grow-1">
     <v-card class="mb-5 pt-5 d-flex flex-column justify-space-between rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -67,3 +44,23 @@
     </v-card>
   </v-container>
 </template>
+<script lang="ts" setup>
+  const BaseUrl = import.meta.env.VITE_BASE_URL
+  interface Props {
+    info?: string
+    infoStatus?: 'success' | 'error' | ''
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    info: '',
+    infoStatus: 'success',
+  })
+
+  const emits = defineEmits(['info-close', 're-write'])
+
+  function onInfoClose (): void {
+    emits('info-close')
+  }
+  function onReWrite (): void {
+    emits('re-write')
+  }
+</script>

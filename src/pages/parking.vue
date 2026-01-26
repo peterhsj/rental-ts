@@ -118,7 +118,7 @@
   // Info View
   const isInfo = ref(false)
   const info = ref('')
-  const infoStatus = ref('')
+  const infoStatus = ref<'success' | 'error' | ''>('')
 
   // Prompt Message Dialog
   const messageDialog = ref(false)
@@ -193,7 +193,7 @@
   }
 
   // 查詢停車登記
-  async function sendSearchForm () {
+  async function sendSearchForm (): Promise<void> {
     const { phone, license_plate } = parkingForm.value
     const payload = {
       phone,
@@ -206,41 +206,42 @@
     try {
       const res = await api.post<ApiResponse<ParkingData[]>>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
-      console.log('message', returnMsg)
 
       if (returnCode === 0 && data && data.length > 0) {
         // 成功
         const parkingData = data[0]
-        const {
-          license_plate: returnedLicensePlate,
-          reserve_start_date: returnedStartDate,
-          reserve_end_date: returnedEndDate,
-        } = parkingData
-        // 提交 - 已完成登記
-        isEdit.value = false
-        isInfo.value = true
-        infoStatus.value = 'success'
-        info.value = `<p class="text-h4 text-grey-darken-1 font-weight-bold my-2">
-          已完成登記
-        </p>
-        <p class="rental__text--h45 text-grey-darken-1 font-weight-bold mt-3">
-          車號
-        </p>
-        <p class="text-h5 text-amber-darken-3 font-weight-bold my-0">
-          ${returnedLicensePlate}
-        </p>
-        <p class="rental__text--h45 text-grey-darken-1 font-weight-bold mt-4">
-          停放日期
-        </p>
-        <p class="text-h5 text-amber-darken-3 font-weight-bold my-0">
-          ${returnedStartDate} ~ ${returnedEndDate}
-        </p>`
-        searchFormRef.value?.initForm()
+        if (parkingData) {
+          const {
+            license_plate: returnedLicensePlate,
+            reserve_start_date: returnedStartDate,
+            reserve_end_date: returnedEndDate,
+          } = parkingData
+          // 提交 - 已完成登記
+          isEdit.value = false
+          isInfo.value = true
+          infoStatus.value = 'success'
+          info.value = `<p class="text-h4 text-grey-darken-1 font-weight-bold my-2">
+            已完成登記
+          </p>
+          <p class="rental__text--h45 text-grey-darken-1 font-weight-bold mt-3">
+            車號
+          </p>
+          <p class="text-h5 text-amber-darken-3 font-weight-bold my-0">
+            ${returnedLicensePlate}
+          </p>
+          <p class="rental__text--h45 text-grey-darken-1 font-weight-bold mt-4">
+            停放日期
+          </p>
+          <p class="text-h5 text-amber-darken-3 font-weight-bold my-0">
+            ${returnedStartDate} ~ ${returnedEndDate}
+          </p>`
+          searchFormRef.value?.initForm()
+        }
       } else {
         // 查無登記資訊
         if (returnCode === -1) {
           info.value = `<p class="my-2 text-h4 text-grey-darken-1 font-weight-bold">
-            查無登記資訊
+            ${returnMsg}
           </p>
           <p class="mt-4 mb-7 text-h5 text-amber-darken-3 font-weight-bold text-center">
             請重新確認登記手機號碼或再次輸入

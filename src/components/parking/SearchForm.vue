@@ -100,22 +100,22 @@
   import Captcha from '@/components/Captcha.vue'
   // Props
   interface Props {
-    formData: {
+    activeTab?: TabItem
+    formData?: {
       ischeck: number
       phone: string
       license_plate: string
       captcha: string
     }
   }
-  const props = defineProps({
-    activeTab: {
-      type: Object as () => TabItem,
-      default: () => ({}),
-    },
-    formData: {
-      type: Object as () => Props['formData'],
-      default: () => ({}),
-    },
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
+    formData: () => ({
+      ischeck: 0,
+      phone: '',
+      license_plate: '',
+      captcha: '',
+    }),
   })
   const emits = defineEmits(['update:formData', 'close-form', 'send-form'])
   const BaseUrl = import.meta.env.VITE_BASE_URL

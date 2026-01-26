@@ -38,22 +38,14 @@
 <script lang="ts" setup>
   import type { TabItem } from '@/utils/site.ts'
 
-  // interface Props {
-  //   tabList?: TabItem[]
-  // }
-  // const props = withDefaults(defineProps<Props>(), {
-  //   tabList: () => [],
-  // })
-  const props = defineProps({
-    tabList: {
-      type: Array as () => TabItem[],
-      default: () => [],
-    },
+  interface Props {
+    tabList?: TabItem[]
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    tabList: () => [],
   })
 
-  const emits = defineEmits<{
-    'set-active-tab': [tab: TabItem]
-  }>()
+  const emits = defineEmits<{ 'set-active-tab': [tab: TabItem] }>()
 
   const BaseUrl = import.meta.env.VITE_BASE_URL
 
