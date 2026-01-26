@@ -55,7 +55,10 @@
     infoStatus: 'success',
   })
 
-  const emits = defineEmits(['info-close', 're-write'])
+  const emits = defineEmits<{
+    'info-close': []
+    're-write': []
+  }>()
 
   function onInfoClose (): void {
     emits('info-close')

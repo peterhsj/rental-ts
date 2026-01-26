@@ -45,7 +45,9 @@
     tabList: () => [],
   })
 
-  const emits = defineEmits<{ 'set-active-tab': [tab: TabItem] }>()
+  const emits = defineEmits<{
+    'set-active-tab': [tab: TabItem]
+  }>()
 
   const BaseUrl = import.meta.env.VITE_BASE_URL
 

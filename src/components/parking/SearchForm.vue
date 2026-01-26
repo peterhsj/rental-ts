@@ -117,7 +117,12 @@
       captcha: '',
     }),
   })
-  const emits = defineEmits(['update:formData', 'close-form', 'send-form'])
+  // Emits
+  const emits = defineEmits<{
+    'update:formData': [typeof props.formData]
+    'close-form': []
+    'send-form': []
+  }>()
   const BaseUrl = import.meta.env.VITE_BASE_URL
 
   const parkingFormRef = ref()

@@ -11,7 +11,9 @@
 <script lang="ts" setup>
   import { onMounted, ref } from 'vue'
 
-  const emits = defineEmits(['set-captcha-code'])
+  const emits = defineEmits<{
+    'set-captcha-code': [string]
+  }>()
 
   const captchaCanvas = ref<HTMLCanvasElement | null>(null)
   const canvasWidth = 120

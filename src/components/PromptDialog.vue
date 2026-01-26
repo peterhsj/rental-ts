@@ -69,7 +69,11 @@
     },
   )
 
-  const emit = defineEmits(['update:messageDialog', 'prompt-confirm', 'on-close'])
+  const emit = defineEmits<{
+    'update:messageDialog': [boolean]
+    'prompt-confirm': []
+    'on-close': []
+  }>()
 
   function onClose (): void {
     show.value = false
