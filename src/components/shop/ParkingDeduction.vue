@@ -1,213 +1,3 @@
-<script setup>
-  import { onMounted, ref } from 'vue'
-  import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    memberInfo: {
-      type: Object,
-      default: () => ({}),
-    },
-  })
-  const emits = defineEmits(['closeForm'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
-
-  const loading = ref(false)
-  const canDeduction = ref(false)
-
-  // carNumber 查詢
-  const formRef = ref()
-  const form = ref({
-    license_plate: '',
-  })
-  const carInfo = ref({})
-  const discountList = ref([])
-  const rules = ref({
-    carRules: [
-      v => !!v || '車號為必填',
-    // v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )'
-    ],
-  })
-
-  // 折抵商店資訊
-  const storeInfo = ref({})
-  const slipHours = ref([])
-  const selectedHour = ref(null)
-
-  // 取得折抵剩餘時數
-  async function getStore () {
-    const payload = {
-      id: props.memberInfo.vendorId,
-    }
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/get_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        storeInfo.value = data[0]
-        slipHours.value = data[0].slipHour.split(',').map(Number)
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  onMounted(async () => {
-    await getStore()
-  })
-
-  const parkingList = ref([])
-
-  // 入場資訊查詢
-  async function searchCarNumber () {
-    const { valid } = await formRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-    const { license_plate } = form.value
-
-    const payload = {
-      license_plate,
-    }
-
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data, discount } = res
-      if (returnCode === 0) {
-        carInfo.value = data
-        discountList.value = discount
-        canDeduction.value = data.ischeck === 0
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-
-  // parkingList.value = [{
-  //   id: 'p01',
-  //   phoneNumber: '',
-  //   carNumber: 'ABC-1234',
-  //   startDate: '2025-10-01 12:30:29',
-  //    endDate: '2025-10-01'
-  // }]
-
-  // 正常狀況下
-  // const newParking = {
-  //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
-  //   carNumber: carNumber,
-  //   startDate: formatDate(startDate),
-  //   endDate: formatDate(endDate)
-  // }
-  // console.log('送出表單', newParking)
-  // parkingList.value.push(newParking)
-  // checkinFormRef.value.reset()
-
-  // 折抵已經超過上限
-  // messageDialog.value = true
-  // messageTitle.value = '折抵已經超過上限'
-  // message.value = `AXN-1234 已當次折抵過，已無法再進行折抵。`
-  // isConfirmBtn.value = false
-  }
-
-  // 選擇折抵時數
-  function selectedHours (hour) {
-    // console.log('選擇折抵時數', hour)
-    selectedHour.value = hour
-  }
-
-  // 商店折抵登記
-  async function onDeduction () {
-    // 檢核欄位
-    if (!selectedHour.value) {
-      messageTitle.value = '訊息通知'
-      message.value = '請選擇折抵時數'
-      isConfirmBtn.value = false
-      messageDialog.value = true
-      return
-    }
-
-    const payload = {
-      vendorId: storeInfo.value.vendorId,
-      store_type: storeInfo.value.store_type,
-      license_plate: form.value.license_plate,
-      count: selectedHour.value,
-    }
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/register_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        // 初始化資料
-        await getStore()
-        formRef.value.reset()
-        carInfo.value = {}
-        discountList.value = []
-        selectedHour.value = null
-        canDeduction.value = false
-        // 通知訊息
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 關閉表單
-  function onCloseForm () {
-    emits('closeForm')
-  }
-
-  // 確認 message
-  function messageConfirm () {
-    messageDialog.value = false
-    delParkingConfirm()
-  }
-  // 離開 message
-  function messageClose () {
-    messageDialog.value = false
-  }
-</script>
-
 <template>
   <div id="parkingDeduction" class="h-100">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -375,3 +165,210 @@
     />
   </div>
 </template>
+<script setup>
+  import { onMounted, ref } from 'vue'
+  import api from '@/api'
+  import PromptDialog from '@/components/PromptDialog.vue'
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object,
+      default: () => ({}),
+    },
+    memberInfo: {
+      type: Object,
+      default: () => ({}),
+    },
+  })
+  const emits = defineEmits(['close-form'])
+  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+
+  // Prompt Message Dialog
+  const messageDialog = ref(false)
+  const messageTitle = ref('')
+  const message = ref('')
+  const isConfirmBtn = ref(false)
+
+  const loading = ref(false)
+  const canDeduction = ref(false)
+
+  // carNumber 查詢
+  const formRef = ref()
+  const form = ref({
+    license_plate: '',
+  })
+  const carInfo = ref({})
+  const discountList = ref([])
+  const rules = ref({
+    carRules: [
+      v => !!v || '車號為必填',
+    // v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )'
+    ],
+  })
+
+  // 折抵商店資訊
+  const storeInfo = ref({})
+  const slipHours = ref([])
+  const selectedHour = ref(null)
+
+  // 取得折抵剩餘時數
+  async function getStore () {
+    const payload = {
+      id: props.memberInfo.vendorId,
+    }
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/get_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        storeInfo.value = data[0]
+        slipHours.value = data[0].slipHour.split(',').map(Number)
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  onMounted(async () => {
+    await getStore()
+  })
+
+  // 入場資訊查詢
+  async function searchCarNumber () {
+    const { valid } = await formRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+    const { license_plate } = form.value
+
+    const payload = {
+      license_plate,
+    }
+
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data, discount } = res
+      if (returnCode === 0) {
+        carInfo.value = data
+        discountList.value = discount
+        canDeduction.value = data.ischeck === 0
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+
+  // parkingList.value = [{
+  //   id: 'p01',
+  //   phoneNumber: '',
+  //   carNumber: 'ABC-1234',
+  //   startDate: '2025-10-01 12:30:29',
+  //    endDate: '2025-10-01'
+  // }]
+
+  // 正常狀況下
+  // const newParking = {
+  //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
+  //   carNumber: carNumber,
+  //   startDate: formatDate(startDate),
+  //   endDate: formatDate(endDate)
+  // }
+  // console.log('送出表單', newParking)
+  // parkingList.value.push(newParking)
+  // checkinFormRef.value.reset()
+
+  // 折抵已經超過上限
+  // messageDialog.value = true
+  // messageTitle.value = '折抵已經超過上限'
+  // message.value = `AXN-1234 已當次折抵過，已無法再進行折抵。`
+  // isConfirmBtn.value = false
+  }
+
+  // 選擇折抵時數
+  function selectedHours (hour) {
+    // console.log('選擇折抵時數', hour)
+    selectedHour.value = hour
+  }
+
+  // 商店折抵登記
+  async function onDeduction () {
+    // 檢核欄位
+    if (!selectedHour.value) {
+      messageTitle.value = '訊息通知'
+      message.value = '請選擇折抵時數'
+      isConfirmBtn.value = false
+      messageDialog.value = true
+      return
+    }
+
+    const payload = {
+      vendorId: storeInfo.value.vendorId,
+      store_type: storeInfo.value.store_type,
+      license_plate: form.value.license_plate,
+      count: selectedHour.value,
+    }
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/register_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg } = res
+      if (returnCode === 0) {
+        // 初始化資料
+        await getStore()
+        formRef.value.reset()
+        carInfo.value = {}
+        discountList.value = []
+        selectedHour.value = null
+        canDeduction.value = false
+        // 通知訊息
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 關閉表單
+  function onCloseForm () {
+    emits('close-form')
+  }
+
+  // 確認 message
+  function messageConfirm () {
+    messageDialog.value = false
+    delParkingConfirm()
+  }
+  // 離開 message
+  function messageClose () {
+    messageDialog.value = false
+  }
+</script>

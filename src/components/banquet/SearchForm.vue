@@ -1,116 +1,3 @@
-<script setup>
-  import { ref } from 'vue'
-  import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-  })
-  const emits = defineEmits(['closeForm'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
-
-  // carNumber 查詢
-  const formRef = ref()
-  const form = ref({
-    carNumber: '',
-  })
-  const rules = ref({
-    carRules: [
-      v => !!v || '車號為必填',
-      v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
-    ],
-  })
-  const loading = ref(false)
-  const canDeduction = ref(false)
-  const parkingList = ref([])
-
-  // 送出表單
-  async function searchCarNumber () {
-    console.log('送出表單', form.value.carNumber)
-    const { valid } = await formRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-    const { license_plate } = form.value
-
-    const payload = {
-      license_plate,
-    }
-    console.log('payload', payload)
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        console.log('data', data)
-      // storeInfo.value = data[0]
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-
-  // 正常狀況下
-  // const newParking = {
-  //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
-  //   carNumber: carNumber,
-  //   startDate: formatDate(startDate),
-  //   endDate: formatDate(endDate)
-  // }
-  // console.log('送出表單', newParking)
-  // parkingList.value.push(newParking)
-  // checkinFormRef.value.reset()
-
-  // 折抵已經超過上限
-  // messageDialog.value = true
-  // messageTitle.value = '折抵已經超過上限'
-  // message.value = `AXN-1234 已當次折抵過，已無法再進行折抵。`
-  // isConfirmBtn.value = false
-  }
-
-  // 選擇折抵時數
-  function selectedHours (hours) {
-    console.log('選擇折抵時數', hours)
-  }
-
-  // 折抵停車時數
-  function onDeduction () {
-    console.log('選擇折抵時數')
-  }
-
-  // 關閉表單
-  function onCloseForm () {
-    emits('closeForm')
-  }
-
-  // 確認 message
-  function messageConfirm () {
-    messageDialog.value = false
-    delParkingConfirm()
-  }
-  // 離開 message
-  function messageClose () {
-    messageDialog.value = false
-  }
-</script>
-
 <template>
   <div id="search" class="h-100">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -266,3 +153,114 @@
     />
   </div>
 </template>
+<script setup>
+  import { ref } from 'vue'
+  import api from '@/api'
+  import PromptDialog from '@/components/PromptDialog.vue'
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object,
+      default: () => ({}),
+    },
+  })
+  const emits = defineEmits(['close-form'])
+  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+
+  // Prompt Message Dialog
+  const messageDialog = ref(false)
+  const messageTitle = ref('')
+  const message = ref('')
+  const isConfirmBtn = ref(false)
+
+  // carNumber 查詢
+  const formRef = ref()
+  const form = ref({
+    carNumber: '',
+  })
+  const rules = ref({
+    carRules: [
+      v => !!v || '車號為必填',
+      v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
+    ],
+  })
+  const loading = ref(false)
+  const parkingList = ref([])
+
+  // 送出表單
+  async function searchCarNumber () {
+    console.log('送出表單', form.value.carNumber)
+    const { valid } = await formRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+    const { license_plate } = form.value
+
+    const payload = {
+      license_plate,
+    }
+    console.log('payload', payload)
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        console.log('data', data)
+      // storeInfo.value = data[0]
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+
+  // 正常狀況下
+  // const newParking = {
+  //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
+  //   carNumber: carNumber,
+  //   startDate: formatDate(startDate),
+  //   endDate: formatDate(endDate)
+  // }
+  // console.log('送出表單', newParking)
+  // parkingList.value.push(newParking)
+  // checkinFormRef.value.reset()
+
+  // 折抵已經超過上限
+  // messageDialog.value = true
+  // messageTitle.value = '折抵已經超過上限'
+  // message.value = `AXN-1234 已當次折抵過，已無法再進行折抵。`
+  // isConfirmBtn.value = false
+  }
+
+  // 選擇折抵時數
+  function selectedHours (hours) {
+    console.log('選擇折抵時數', hours)
+  }
+
+  // 折抵停車時數
+  function onDeduction () {
+    console.log('選擇折抵時數')
+  }
+
+  // 關閉表單
+  function onCloseForm () {
+    emits('close-form')
+  }
+
+  // 確認 message
+  function messageConfirm () {
+    messageDialog.value = false
+    delParkingConfirm()
+  }
+  // 離開 message
+  function messageClose () {
+    messageDialog.value = false
+  }
+</script>

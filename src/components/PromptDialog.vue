@@ -40,7 +40,7 @@
     </v-card>
   </v-dialog>
 </template>
-<script lang="ts" setup>
+<script setup lang="ts">
   import { ref, watch } from 'vue'
   interface Props {
     messageDialog?: boolean

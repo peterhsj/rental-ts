@@ -47,7 +47,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
   import type { TabItem } from '@/utils/site.ts'
   const BaseUrl = import.meta.env.VITE_BASE_URL
 

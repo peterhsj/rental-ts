@@ -62,9 +62,8 @@
     <CommonOverlay :overlay="loading" />
   </div>
 </template>
-<script lang="ts" setup>
+<script setup lang="ts">
   import type { TabItem } from '@/utils/site.ts'
-
   import { onMounted, onUnmounted, ref } from 'vue'
   import api from '@/api'
   import CommonOverlay from '@/components/CommonOverlay.vue'

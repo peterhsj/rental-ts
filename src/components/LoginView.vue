@@ -1,4 +1,110 @@
-<script lang="ts" setup>
+<template>
+  <div id="login" class="pa-5 mx-auto h-100 rental rental__wrapper">
+    <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
+      <div class="px-4 py-3 d-flex align-center" :class="currentHeader.bgColor">
+        <span>
+          <v-img
+            alt="icon"
+            cover
+            height="40"
+            :src="`${BaseUrl}${currentHeader.icon}`"
+            width="45"
+          />
+        </span>
+        <span class="ml-3 text-h6 font-weight-bold text-grey-darken-2">
+          {{ currentHeader.title }}
+        </span>
+      </div>
+      <v-form ref="loginFormRef" class="h-100" @submit.prevent="onSendForm">
+        <v-container class="pb-2 d-flex flex-column justify-space-between" style="height: calc(100% - 64px);">
+          <v-row class="flex-0-1" dense>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="loginForm.account"
+                autocomplete="off"
+                color="blue-darken-2"
+                density="compact"
+                placeholder="請輸入帳號"
+                required
+                :rules="rules.accountRules"
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="loginForm.password"
+                :append-inner-icon="isShowPassword ? 'fa:far fa-eye-slash' : 'fa:far fa-eye'"
+                autocomplete="off"
+                color="blue-darken-2"
+                density="compact"
+                placeholder="請輸入密碼"
+                required
+                :rules="rules.passwordRules"
+                :type="isShowPassword ? 'text' : 'password'"
+                variant="outlined"
+                @click:append-inner="isShowPassword = !isShowPassword"
+              />
+            </v-col>
+            <v-col class="py-0" cols="12">
+              <p class="text-subtitle-1 font-weight-bold">驗證碼</p>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="loginForm.captcha"
+                autocomplete="off"
+                color="blue-darken-2"
+                density="compact"
+                placeholder="請輸入驗證碼"
+                required
+                :rules="rules.captchaRules"
+                variant="outlined"
+                @input="loginForm.captcha = loginForm.captcha.toUpperCase()"
+              >
+                <template #append>
+                  <div style="width:120px;height:40px;">
+                    <Captcha @set-captcha-code="setCaptchaCode" />
+                  </div>
+                </template>
+              </v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <p class="text-subtitle-2 text-red-darken-1">
+                注意：<br>
+                更換車號請重新操作，入場當日無法更換登記車號。
+              </p>
+            </v-col>
+          </v-row>
+          <v-row class="flex-0-1" no-gutters>
+            <v-col class="mt-4" cols="12">
+              <div class="d-flex ga-2 flex-wrap justify-end w-100">
+                <v-btn
+                  class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
+                  color="light-green-darken-2"
+                  height="40"
+                  type="submit"
+                  variant="flat"
+                >
+                  登入
+                </v-btn>
+              </div>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-form>
+    </v-card>
+    <!-- 共用元件 -->
+    <CommonOverlay :overlay="loading" />
+    <!-- Prompt Dialog -->
+    <PromptDialog
+      v-model="messageDialog"
+      :is-confirm-btn="isConfirmBtn"
+      :message="message"
+      :message-title="messageTitle"
+      @on-close="messageClose"
+    />
+  </div>
+</template>
+<script setup lang="ts">
   import { ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import api from '@/api'
@@ -11,9 +117,6 @@
     captcha: string
   }
 
-  // 定義允許的路由類型
-  type HeaderKeys = 'CounterLogin' | 'ShopLogin' | 'BanquetLogin'
-
   const BaseUrl = import.meta.env.VITE_BASE_URL
 
   const route = useRoute()
@@ -25,6 +128,9 @@
   const messageTitle = ref('')
   const message = ref('')
   const isConfirmBtn = ref(false)
+
+  // 定義允許的路由類型
+  type HeaderKeys = 'CounterLogin' | 'ShopLogin' | 'BanquetLogin'
 
   interface HeaderConfig {
     title: string
@@ -155,110 +261,3 @@
     messageDialog.value = false
   }
 </script>
-
-<template>
-  <div id="login" class="pa-5 mx-auto h-100 rental rental__wrapper">
-    <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
-      <div class="px-4 py-3 d-flex align-center" :class="currentHeader.bgColor">
-        <span>
-          <v-img
-            alt="icon"
-            cover
-            height="40"
-            :src="`${BaseUrl}${currentHeader.icon}`"
-            width="45"
-          />
-        </span>
-        <span class="ml-3 text-h6 font-weight-bold text-grey-darken-2">
-          {{ currentHeader.title }}
-        </span>
-      </div>
-      <v-form ref="loginFormRef" class="h-100" @submit.prevent="onSendForm">
-        <v-container class="pb-2 d-flex flex-column justify-space-between" style="height: calc(100% - 64px);">
-          <v-row class="flex-0-1" dense>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="loginForm.account"
-                autocomplete="off"
-                color="blue-darken-2"
-                density="compact"
-                placeholder="請輸入帳號"
-                required
-                :rules="rules.accountRules"
-                variant="outlined"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="loginForm.password"
-                :append-inner-icon="isShowPassword ? 'fa:far fa-eye-slash' : 'fa:far fa-eye'"
-                autocomplete="off"
-                color="blue-darken-2"
-                density="compact"
-                placeholder="請輸入密碼"
-                required
-                :rules="rules.passwordRules"
-                :type="isShowPassword ? 'text' : 'password'"
-                variant="outlined"
-                @click:append-inner="isShowPassword = !isShowPassword"
-              />
-            </v-col>
-            <v-col class="py-0" cols="12">
-              <p class="text-subtitle-1 font-weight-bold">驗證碼</p>
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="loginForm.captcha"
-                autocomplete="off"
-                color="blue-darken-2"
-                density="compact"
-                placeholder="請輸入驗證碼"
-                required
-                :rules="rules.captchaRules"
-                variant="outlined"
-                @input="loginForm.captcha = loginForm.captcha.toUpperCase()"
-              >
-                <template #append>
-                  <div style="width:120px;height:40px;">
-                    <Captcha @set-captcha-code="setCaptchaCode" />
-                  </div>
-                </template>
-              </v-text-field>
-            </v-col>
-            <v-col cols="12">
-              <p class="text-subtitle-2 text-red-darken-1">
-                注意：<br>
-                更換車號請重新操作，入場當日無法更換登記車號。
-              </p>
-            </v-col>
-          </v-row>
-          <v-row class="flex-0-1" no-gutters>
-            <v-col class="mt-4" cols="12">
-              <div class="d-flex ga-2 flex-wrap justify-end w-100">
-                <v-btn
-                  class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
-                  color="light-green-darken-2"
-                  height="40"
-                  type="submit"
-                  variant="flat"
-                >
-                  登入
-                </v-btn>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-form>
-    </v-card>
-    <!-- 共用元件 -->
-    <CommonOverlay :overlay="loading" />
-    <!-- Prompt Dialog -->
-    <PromptDialog
-      v-model="messageDialog"
-      :is-confirm-btn="isConfirmBtn"
-      :message="message"
-      :message-title="messageTitle"
-      @on-close="messageClose"
-    />
-  </div>
-</template>

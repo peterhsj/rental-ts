@@ -1,11 +1,13 @@
-import { format, fromUnixTime, isValid, parse } from 'date-fns'
+import { format } from 'date-fns'
 
 // 'Wed Dec 17 2025 00:00:00 GMT+0800' -> '2025-12-17'
-function formatDate (dateString: string): string {
-  if (!dateString) {
+// 也可接收 Date 物件
+function formatDate (dateInput: unknown): string {
+  if (!dateInput) {
     return ''
   }
-  const date = new Date(dateString)
+
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput as string)
   const formatted = format(date, 'yyyy-MM-dd')
   return formatted
 }

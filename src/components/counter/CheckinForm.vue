@@ -77,7 +77,7 @@
           <v-list>
             <v-list-item
               v-for="parking in parkingList"
-              :key="parking.id"
+              :key="parking.license_plate"
               class="py-2"
             >
               <div class="d-flex justify-space-between w-100">
@@ -133,34 +133,13 @@
     />
   </div>
 </template>
-<script lang="ts" setup>
+<script setup lang="ts">
   import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
   import api from '@/api/index.ts'
   import PromptDialog from '@/components/PromptDialog.vue'
   import { formatDate } from '@/utils/date.ts'
-
-  interface CheckinForm {
-    id?: number
-    license_plate: string
-    reserve_start_date: string
-    reserve_end_date: string
-    note: string
-  }
-
-  interface Rules {
-    carRules: Array<(v: any) => boolean | string>
-    startDateRule: Array<(v: any) => boolean | string>
-    endDateRule: Array<(v: any) => boolean | string>
-  }
-
-  interface Payload {
-    license_plate: string
-    reserve_start_date: string
-    reserve_end_date: string
-    note: string
-  }
 
   // Props
   const props = defineProps({
@@ -184,6 +163,13 @@
 
   const loading = ref<boolean>(false)
   // checkin
+  interface CheckinForm {
+    id?: number
+    license_plate: string
+    reserve_start_date: string
+    reserve_end_date: string
+    note: string
+  }
   const checkinForm = ref<CheckinForm>({
     license_plate: '',
     reserve_start_date: '',
@@ -192,6 +178,11 @@
   })
   const checkinFormRef = ref()
   const delItem = ref<CheckinForm | null>(null)
+  interface Rules {
+    carRules: Array<(v: any) => boolean | string>
+    startDateRule: Array<(v: any) => boolean | string>
+    endDateRule: Array<(v: any) => boolean | string>
+  }
   const rules = ref<Rules>({
     carRules: [
       v => !!v || '車號為必填',
@@ -219,6 +210,12 @@
       },
     ],
   })
+  interface Payload {
+    license_plate: string
+    reserve_start_date: string
+    reserve_end_date: string
+    note: string
+  }
   const parkingList = ref<Payload[]>([])
 
   // 送出表單
@@ -261,10 +258,12 @@
 
   // 刪除登記車號確認
   function delParkingConfirm (): void {
-    console.log('delItem', delItem.value)
-    const index = parkingList.value.findIndex(p => p.license_plate === delItem.value.license_plate)
-    if (index !== -1) {
-      parkingList.value.splice(index, 1)
+    const { license_plate } = delItem.value || {}
+    if (license_plate) {
+      const index = parkingList.value.findIndex(p => p.license_plate === license_plate)
+      if (index !== -1) {
+        parkingList.value.splice(index, 1)
+      }
     }
   }
 

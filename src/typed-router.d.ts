@@ -20,7 +20,10 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...path]': RouteRecordInfo<'/[...path]', '/:path(.*)', { path: ParamValue<true> }, { path: ParamValue<false> }>,
+    '/banquet': RouteRecordInfo<'/banquet', '/banquet', Record<never, never>, Record<never, never>>,
+    '/counter': RouteRecordInfo<'/counter', '/counter', Record<never, never>, Record<never, never>>,
     '/parking': RouteRecordInfo<'/parking', '/parking', Record<never, never>, Record<never, never>>,
+    '/shop': RouteRecordInfo<'/shop', '/shop', Record<never, never>, Record<never, never>>,
   }
 
   /**
@@ -42,8 +45,20 @@ declare module 'vue-router/auto-routes' {
       routes: '/[...path]'
       views: never
     }
+    'src/pages/banquet.vue': {
+      routes: '/banquet'
+      views: never
+    }
+    'src/pages/counter.vue': {
+      routes: '/counter'
+      views: never
+    }
     'src/pages/parking.vue': {
       routes: '/parking'
+      views: never
+    }
+    'src/pages/shop.vue': {
+      routes: '/shop'
       views: never
     }
   }

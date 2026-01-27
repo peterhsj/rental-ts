@@ -1,95 +1,3 @@
-<script setup>
-  import { ref } from 'vue'
-  import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-  })
-  const emits = defineEmits(['closeForm'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
-
-  const loading = ref(false)
-  // checkin
-  const searchForm = ref({
-    phone: '',
-    license_plate: '',
-  })
-  const searchFormRef = ref()
-  const rules = ref({
-    phoneRules: [
-      v => !v || /^\d{10}$/.test(v) || '請輸入有效的手機號碼',
-    ],
-    carRules: [
-      v => !v || /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
-    ],
-  })
-
-  // Fake parking list
-  const parkingList = ref([])
-
-  // 送出表單
-  async function searchHandler () {
-    const { valid } = await searchFormRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-    const { phone, license_plate } = searchForm.value
-
-    if (phone === '' && license_plate === '') {
-      messageDialog.value = true
-      messageTitle.value = '無法登記'
-      message.value = `請輸入登記手機號碼或登記車號`
-      isConfirmBtn.value = false
-      return
-    }
-    const payload = { phone, license_plate }
-
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/select_counter?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        parkingList.value = data
-      } else {
-        messageDialog.value = true
-        messageTitle.value = '訊息'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 關閉表單
-  function onCloseForm () {
-    emits('closeForm')
-  }
-
-  // 確認 message
-  function messageConfirm () {
-    messageDialog.value = false
-  }
-  // 離開 message
-  function messageClose () {
-    messageDialog.value = false
-  }
-</script>
-
 <template>
   <div id="search" class="h-100">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -228,3 +136,94 @@
     />
   </div>
 </template>
+<script setup>
+  import { ref } from 'vue'
+  import api from '@/api'
+  import PromptDialog from '@/components/PromptDialog.vue'
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object,
+      default: () => ({}),
+    },
+  })
+  const emits = defineEmits(['close-form'])
+  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+
+  // Prompt Message Dialog
+  const messageDialog = ref(false)
+  const messageTitle = ref('')
+  const message = ref('')
+  const isConfirmBtn = ref(false)
+
+  const loading = ref(false)
+  // checkin
+  const searchForm = ref({
+    phone: '',
+    license_plate: '',
+  })
+  const searchFormRef = ref()
+  const rules = ref({
+    phoneRules: [
+      v => !v || /^\d{10}$/.test(v) || '請輸入有效的手機號碼',
+    ],
+    carRules: [
+      v => !v || /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
+    ],
+  })
+
+  // Fake parking list
+  const parkingList = ref([])
+
+  // 送出表單
+  async function searchHandler () {
+    const { valid } = await searchFormRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+    const { phone, license_plate } = searchForm.value
+
+    if (phone === '' && license_plate === '') {
+      messageDialog.value = true
+      messageTitle.value = '無法登記'
+      message.value = `請輸入登記手機號碼或登記車號`
+      isConfirmBtn.value = false
+      return
+    }
+    const payload = { phone, license_plate }
+
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/select_counter?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        parkingList.value = data
+      } else {
+        messageDialog.value = true
+        messageTitle.value = '訊息'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 關閉表單
+  function onCloseForm () {
+    emits('close-form')
+  }
+
+  // 確認 message
+  function messageConfirm () {
+    messageDialog.value = false
+  }
+  // 離開 message
+  function messageClose () {
+    messageDialog.value = false
+  }
+</script>

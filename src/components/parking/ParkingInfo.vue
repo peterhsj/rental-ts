@@ -1,21 +1,3 @@
-<script setup>
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-  })
-  const emits = defineEmits(['closeForm'])
-
-  // 關閉表單
-  function onCloseForm () {
-    emits('closeForm')
-  }
-</script>
-
 <template>
   <div id="parkingInfo" class="h-100">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -37,3 +19,20 @@
     </v-card>
   </div>
 </template>
+<script setup>
+  const BaseUrl = import.meta.env.VITE_BASE_URL
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object,
+      default: () => ({}),
+    },
+  })
+  const emits = defineEmits(['close-form'])
+
+  // 關閉表單
+  function onCloseForm () {
+    emits('close-form')
+  }
+</script>

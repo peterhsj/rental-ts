@@ -1,3 +1,320 @@
+<template>
+  <div id="checkin" class="h-100">
+    <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
+      <div class="px-4 py-3 d-flex align-center rental__header rental__bg--light-orange" @click="onCloseForm">
+        <v-icon class="mr-2" color="grey-darken-1" icon="fa:fas fa-chevron-left" size="20" />
+        <span>
+          <v-img
+            alt="icon"
+            cover
+            height="30"
+            :src="`${BaseUrl}${props.activeTab.icon}`"
+            width="35"
+          />
+        </span>
+        <span class="ml-3 text-h6 font-weight-bold text-grey-darken-2">
+          {{ currentStatus === 'showList' ||　currentStatus === 'showQRCode' ? props.activeTab.title : '產出 QRCode' }}
+        </span>
+      </div>
+      <v-container class="pb-2 d-flex flex-column justify-space-between" style="height: calc(100% - 64px);">
+        <!-- 登記列表 -->
+        <v-card v-if="currentStatus === 'showList'" class="mt-5 pa-2 rounded-lg flex-grow-1 overflow-y-auto" variant="flat">
+          <v-row v-if="qrCodeList.length > 0">
+            <v-col
+              v-for="item in qrCodeList"
+              :key="item.id"
+              cols="12"
+              md="3"
+              sm="6"
+            >
+              <v-card
+                class="pa-2 rounded-lg bg-light-green-darken-1 text-white mb-4 d-flex flex-row align-center"
+                :class="{'opacity-50': item.disabled}"
+                :disabled="item.disabled"
+                link
+                variant="flat"
+                @click="openQrCode(item)"
+              >
+                <div class="mx-4">
+                  <v-img
+                    alt="icon"
+                    cover
+                    height="30"
+                    :src="`${BaseUrl}/images/qrcode.svg`"
+                    width="35"
+                  />
+                </div>
+                <div class="my-2">
+                  <p class="py-1 text-h6 font-weight-regular">
+                    {{ item.startDate }}
+                  </p>
+                  <p class="text-h6 font-weight-regular">
+                    {{ item.title }}
+                  </p>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card>
+
+        <!-- 顯示 QRCode -->
+        <v-card v-if="currentStatus === 'showQRCode'" class="mt-5 pa-2 rounded-lg flex-grow-1 overflow-y-auto" variant="flat">
+          <!-- <div> -->
+          <div class="ma-6 d-flex flex-column align-center justify-center">
+            <span>
+              <v-img
+                alt="icon"
+                color="black"
+                cover
+                height="200"
+                :src="`${BaseUrl}/images/qrcode.svg`"
+                width="200"
+              />
+            </span>
+            <div class="my-6 d-flex flex-column align-center justify-center">
+              <p class="py-6 text-h5 font-weight-bold">
+                王林府喜宴
+              </p>
+              <p class="text-h5 font-weight-bold">
+                有效日期
+              </p>
+              <p class="text-h5 font-weight-regular">
+                2025-10-01 23:30
+              </p>
+              <p class="py-6 text-h5 font-weight-bold">
+                折抵小時數 3
+              </p>
+            </div>
+          </div>
+          <!-- </div> -->
+        </v-card>
+
+        <!-- 產出 QRCode -->
+        <v-card v-if="currentStatus === 'addQrCode'" class="mt-5 pa-2 rounded-lg flex-grow-1 overflow-y-auto" variant="flat">
+          <v-form ref="qrCodeFormRef">
+            <v-row class="flex-0-1" dense>
+              <v-col cols="12">
+                <p class="mt-1 mb-2 text-h6 text-grey-darken-1">
+                  宴會名稱：
+                </p>
+              </v-col>
+              <v-col cols="12" md="4">
+                <v-text-field
+                  v-model="qrCodeForm.banquet_name"
+                  autocomplete="off"
+                  color="blue-darken-2"
+                  density="compact"
+                  placeholder="請輸入宴會名稱"
+                  required
+                  :rules="rules.nameRules"
+                  variant="outlined"
+                />
+              </v-col>
+              <v-col cols="12">
+                <p class="mt-1 mb-2 text-h6 text-grey-darken-1">
+                  有效日期及時間：
+                </p>
+              </v-col>
+              <v-col class="d-flex flex-no-wrap align-center" cols="12" md="4">
+                <v-date-input
+                  v-model="qrCodeForm.banquet_start"
+                  append-inner-icon="fa:far fa-calendar-alt"
+                  bg-color="white"
+                  color="blue-darken-2"
+                  density="compact"
+                  :display-format="formatDate"
+                  placeholder="起：2026-01-01"
+                  prepend-icon=""
+                  required
+                  :rules="rules.startDateRule"
+                  variant="outlined"
+                />
+              </v-col>
+              <v-col class="d-flex flex-no-wrap align-center" cols="12" md="4">
+                <v-row dense>
+                  <v-col class="flex-grow-1" cols="auto">
+                    <v-select
+                      v-model="qrCodeForm.startHour"
+                      bg-color="white"
+                      color="blue-darken-2"
+                      density="compact"
+                      :items="hours"
+                      placeholder="時"
+                      required
+                      :rules="[!!qrCodeForm.startHour || '請選擇時']"
+                      variant="outlined"
+                    />
+                  </v-col>
+                  <v-col cols="auto">
+                    <span class="text-h5">:</span>
+                  </v-col>
+                  <v-col class="flex-grow-1" cols="auto">
+                    <v-select
+                      v-model="qrCodeForm.startMinute"
+                      bg-color="white"
+                      color="blue-darken-2"
+                      density="compact"
+                      :items="minutes"
+                      placeholder="分"
+                      required
+                      :rules="[!!qrCodeForm.startMinute || '請選擇分']"
+                      variant="outlined"
+                    />
+                  </v-col>
+                  <v-col cols="auto">
+                    <span class="text-h5">:</span>
+                  </v-col>
+                  <v-col class="flex-grow-1" cols="auto">
+                    <v-select
+                      v-model="qrCodeForm.startSecond"
+                      bg-color="white"
+                      color="blue-darken-2"
+                      density="compact"
+                      :items="seconds"
+                      placeholder="秒"
+                      required
+                      :rules="[!!qrCodeForm.startSecond || '請選擇秒']"
+                      variant="outlined"
+                    />
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
+            <v-row class="flex-0-1" dense>
+              <v-col cols="12" md="4">
+                <v-date-input
+                  v-model="qrCodeForm.banquet_end"
+                  append-inner-icon="fa:far fa-calendar-alt"
+                  bg-color="white"
+                  color="blue-darken-2"
+                  density="compact"
+                  :display-format="formatDate"
+                  placeholder="迄：2026-01-01"
+                  prepend-icon=""
+                  required
+                  :rules="rules.endDateRule"
+                  variant="outlined"
+                />
+              </v-col>
+              <v-col class="d-flex flex-no-wrap align-center" cols="12" md="4">
+                <v-row dense>
+                  <v-col class="flex-grow-1" cols="auto">
+                    <v-select
+                      v-model="qrCodeForm.endHour"
+                      bg-color="white"
+                      color="blue-darken-2"
+                      density="compact"
+                      :items="hours"
+                      placeholder="時"
+                      required
+                      :rules="[!!qrCodeForm.endHour || '請選擇時']"
+                      variant="outlined"
+                    />
+                  </v-col>
+                  <v-col cols="auto">
+                    <span class="text-h5">:</span>
+                  </v-col>
+                  <v-col class="flex-grow-1" cols="auto">
+                    <v-select
+                      v-model="qrCodeForm.endMinute"
+                      bg-color="white"
+                      color="blue-darken-2"
+                      density="compact"
+                      :items="minutes"
+                      placeholder="分"
+                      required
+                      :rules="[!!qrCodeForm.endMinute || '請選擇分']"
+                      variant="outlined"
+                    />
+                  </v-col>
+                  <v-col cols="auto">
+                    <span class="text-h5">:</span>
+                  </v-col>
+                  <v-col class="flex-grow-1" cols="auto">
+                    <v-select
+                      v-model="qrCodeForm.endSecond"
+                      bg-color="white"
+                      color="blue-darken-2"
+                      density="compact"
+                      :items="seconds"
+                      placeholder="秒"
+                      required
+                      :rules="[!!qrCodeForm.endSecond || '請選擇秒']"
+                      variant="outlined"
+                    />
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
+            <v-row class="flex-0-1" dense>
+              <v-col cols="12" md="4">
+                <v-select
+                  v-model="qrCodeForm.count"
+                  bg-color="white"
+                  color="blue-darken-2"
+                  density="compact"
+                  item-title="title"
+                  item-value="value"
+                  :items="countList"
+                  placeholder="請選擇時間"
+                  required
+                  :rules="rules.countRule"
+                  variant="outlined"
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+
+        <v-row class="flex-0-1" no-gutters>
+          <v-col cols="12">
+            <div class="mt-3 d-flex flex-wrap justify-end w-100">
+              <v-btn
+                v-if="currentStatus === 'showList'"
+                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
+                color="blue-darken-3"
+                height="40"
+                variant="flat"
+                @click="setQrCode"
+              >
+                新增折抵 QRCode
+              </v-btn>
+              <v-btn
+                v-if="currentStatus === 'showQRCode'"
+                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
+                color="blue-darken-3"
+                height="40"
+                variant="flat"
+                @click="currentStatus = 'showList'"
+              >
+                回選單
+              </v-btn>
+              <v-btn
+                v-if="currentStatus === 'addQrCode'"
+                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
+                color="blue-darken-3"
+                height="40"
+                variant="flat"
+                @click.prevent="addQrCodeConfirm"
+              >
+                產出 QRCode
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-card>
+    <!-- Prompt Dialog -->
+    <PromptDialog
+      v-model="messageDialog"
+      :is-confirm-btn="isConfirmBtn"
+      :message="message"
+      :message-title="messageTitle"
+      @on-close="messageClose"
+      @prompt-confirm="messageConfirm"
+    />
+  </div>
+</template>
 <script setup>
   import { isAfter, isBefore } from 'date-fns'
   import { onMounted, ref } from 'vue'
@@ -16,7 +333,7 @@
       required: true,
     },
   })
-  const emits = defineEmits(['closeForm'])
+  const emits = defineEmits(['close-form'])
   const BaseUrl = import.meta.env.VITE_API_DOMAIN
 
   const loading = ref(false)
@@ -193,7 +510,7 @@
 
   // 關閉表單
   function onCloseForm () {
-    emits('closeForm')
+    emits('close-form')
   }
 
   // 確認 message
@@ -205,325 +522,7 @@
     messageDialog.value = false
   }
 </script>
-
-<template>
-  <div id="checkin" class="h-100">
-    <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
-      <div class="px-4 py-3 d-flex align-center rental__header rental__bg--light-orange" @click="onCloseForm">
-        <v-icon class="mr-2" color="grey-darken-1" icon="fa:fas fa-chevron-left" size="20" />
-        <span>
-          <v-img
-            alt="icon"
-            cover
-            height="30"
-            :src="`${BaseUrl}${props.activeTab.icon}`"
-            width="35"
-          />
-        </span>
-        <span class="ml-3 text-h6 font-weight-bold text-grey-darken-2">
-          {{ currentStatus === 'showList' ||　currentStatus === 'showQRCode' ? props.activeTab.title : '產出 QRCode' }}
-        </span>
-      </div>
-      <v-container class="pb-2 d-flex flex-column justify-space-between" style="height: calc(100% - 64px);">
-        <!-- 登記列表 -->
-        <v-card v-if="currentStatus === 'showList'" class="mt-5 pa-2 rounded-lg flex-grow-1 overflow-y-auto" variant="flat">
-          <v-row v-if="qrCodeList.length > 0">
-            <v-col
-              v-for="item in qrCodeList"
-              :key="item.id"
-              cols="12"
-              md="3"
-              sm="6"
-            >
-              <v-card
-                class="pa-2 rounded-lg bg-light-green-darken-1 text-white mb-4 d-flex flex-row align-center"
-                :class="{'opacity-50': item.disabled}"
-                :disabled="item.disabled"
-                link
-                variant="flat"
-                @click="openQrCode(item)"
-              >
-                <div class="mx-4">
-                  <v-img
-                    alt="icon"
-                    cover
-                    height="30"
-                    :src="`${BaseUrl}/images/qrcode.svg`"
-                    width="35"
-                  />
-                </div>
-                <div class="my-2">
-                  <p class="py-1 text-h6 font-weight-regular">
-                    {{ item.startDate }}
-                  </p>
-                  <p class="text-h6 font-weight-regular">
-                    {{ item.title }}
-                  </p>
-                </div>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card>
-
-        <!-- 顯示 QRCode -->
-        <v-card v-if="currentStatus === 'showQRCode'" class="mt-5 pa-2 rounded-lg flex-grow-1 overflow-y-auto" variant="flat">
-          <!-- <div> -->
-          <div class="ma-6 d-flex flex-column align-center justify-center">
-            <span>
-              <v-img
-                alt="icon"
-                color="black"
-                cover
-                height="200"
-                :src="`${BaseUrl}/images/qrcode.svg`"
-                width="200"
-              />
-            </span>
-            <div class="my-6 d-flex flex-column align-center justify-center">
-              <p class="py-6 text-h5 font-weight-bold">
-                王林府喜宴
-              </p>
-              <p class="text-h5 font-weight-bold">
-                有效日期
-              </p>
-              <p class="text-h5 font-weight-regular">
-                2025-10-01 23:30
-              </p>
-              <p class="py-6 text-h5 font-weight-bold">
-                折抵小時數 3
-              </p>
-            </div>
-          </div>
-          <!-- </div> -->
-        </v-card>
-
-        <!-- 產出 QRCode -->
-        <v-card v-if="currentStatus === 'addQrCode'" class="mt-5 pa-2 rounded-lg flex-grow-1 overflow-y-auto" variant="flat">
-          <v-form ref="qrCodeFormRef">
-            <v-row class="flex-0-1" dense>
-              <v-col cols="12">
-                <p class="mt-1 mb-2 text-h6 text-grey-darken-1">
-                  宴會名稱：
-                </p>
-              </v-col>
-              <v-col cols="12" md="4">
-                <v-text-field
-                  v-model="qrCodeForm.banquet_name"
-                  autocomplete="off"
-                  color="blue-darken-2"
-                  density="compact"
-                  placeholder="請輸入宴會名稱"
-                  required
-                  :rules="rules.nameRules"
-                  variant="outlined"
-                />
-              </v-col>
-              <v-col cols="12">
-                <p class="mt-1 mb-2 text-h6 text-grey-darken-1">
-                  有效日期及時間：
-                </p>
-              </v-col>
-              <v-col class="d-flex flex-no-wrap align-center" cols="12" md="4">
-                <v-date-input
-                  v-model="qrCodeForm.banquet_start"
-                  append-inner-icon="fa:far fa-calendar-alt"
-                  color="blue-darken-2"
-                  density="compact"
-                  bg-color="white"
-                  :display-format="formatDate"
-                  placeholder="起：2026-01-01"
-                  prepend-icon=""
-                  required
-                  :rules="rules.startDateRule"
-                  variant="outlined"
-                />
-              </v-col>
-              <v-col class="d-flex flex-no-wrap align-center" cols="12" md="4">
-                <v-row dense>
-                  <v-col class="flex-grow-1" cols="auto">
-                    <v-select
-                      v-model="qrCodeForm.startHour"
-                      bg-color="white"
-                      color="blue-darken-2"
-                      density="compact"
-                      :items="hours"
-                      placeholder="時"
-                      required
-                      :rules="[!!qrCodeForm.startHour || '請選擇時']"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="auto">
-                    <span class="text-h5">:</span>
-                  </v-col>
-                  <v-col class="flex-grow-1" cols="auto">
-                    <v-select
-                      v-model="qrCodeForm.startMinute"
-                      bg-color="white"
-                      color="blue-darken-2"
-                      density="compact"
-                      :items="minutes"
-                      placeholder="分"
-                      required
-                      :rules="[!!qrCodeForm.startMinute || '請選擇分']"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="auto">
-                    <span class="text-h5">:</span>
-                  </v-col>
-                  <v-col class="flex-grow-1" cols="auto">
-                    <v-select
-                      v-model="qrCodeForm.startSecond"
-                      bg-color="white"
-                      color="blue-darken-2"
-                      density="compact"
-                      :items="seconds"
-                      placeholder="秒"
-                      required
-                      :rules="[!!qrCodeForm.startSecond || '請選擇秒']"
-                      variant="outlined"
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
-            </v-row>
-            <v-row class="flex-0-1" dense>
-              <v-col cols="12" md="4">
-                <v-date-input
-                  v-model="qrCodeForm.banquet_end"
-                  append-inner-icon="fa:far fa-calendar-alt"
-                  color="blue-darken-2"
-                  density="compact"
-                  bg-color="white"
-                  :display-format="formatDate"
-                  placeholder="迄：2026-01-01"
-                  prepend-icon=""
-                  required
-                  :rules="rules.endDateRule"
-                  variant="outlined"
-                />
-              </v-col>
-              <v-col class="d-flex flex-no-wrap align-center" cols="12" md="4">
-                <v-row dense>
-                  <v-col class="flex-grow-1" cols="auto">
-                    <v-select
-                      v-model="qrCodeForm.endHour"
-                      bg-color="white"
-                      color="blue-darken-2"
-                      density="compact"
-                      :items="hours"
-                      placeholder="時"
-                      required
-                      :rules="[!!qrCodeForm.endHour || '請選擇時']"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="auto">
-                    <span class="text-h5">:</span>
-                  </v-col>
-                  <v-col class="flex-grow-1" cols="auto">
-                    <v-select
-                      v-model="qrCodeForm.endMinute"
-                      bg-color="white"
-                      color="blue-darken-2"
-                      density="compact"
-                      :items="minutes"
-                      placeholder="分"
-                      required
-                      :rules="[!!qrCodeForm.endMinute || '請選擇分']"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="auto">
-                    <span class="text-h5">:</span>
-                  </v-col>
-                  <v-col class="flex-grow-1" cols="auto">
-                    <v-select
-                      v-model="qrCodeForm.endSecond"
-                      bg-color="white"
-                      color="blue-darken-2"
-                      density="compact"
-                      :items="seconds"
-                      placeholder="秒"
-                      required
-                      :rules="[!!qrCodeForm.endSecond || '請選擇秒']"
-                      variant="outlined"
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
-            </v-row>
-            <v-row class="flex-0-1" dense>
-              <v-col cols="12" md="4">
-                <v-select
-                  v-model="qrCodeForm.count"
-                  color="blue-darken-2"
-                  density="compact"
-                  bg-color="white"
-                  item-title="title"
-                  item-value="value"
-                  :items="countList"
-                  placeholder="請選擇時間"
-                  required
-                  :rules="rules.countRule"
-                  variant="outlined"
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
-
-        <v-row class="flex-0-1" no-gutters>
-          <v-col cols="12">
-            <div class="mt-3 d-flex flex-wrap justify-end w-100">
-              <v-btn
-                v-if="currentStatus === 'showList'"
-                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
-                color="blue-darken-3"
-                height="40"
-                variant="flat"
-                @click="setQrCode"
-              >
-                新增折抵 QRCode
-              </v-btn>
-              <v-btn
-                v-if="currentStatus === 'showQRCode'"
-                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
-                color="blue-darken-3"
-                height="40"
-                variant="flat"
-                @click="currentStatus = 'showList'"
-              >
-                回選單
-              </v-btn>
-              <v-btn
-                v-if="currentStatus === 'addQrCode'"
-                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
-                color="blue-darken-3"
-                height="40"
-                variant="flat"
-                @click.prevent="addQrCodeConfirm"
-              >
-                產出 QRCode
-              </v-btn>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-card>
-    <!-- Prompt Dialog -->
-    <PromptDialog
-      v-model="messageDialog"
-      :is-confirm-btn="isConfirmBtn"
-      :message="message"
-      :message-title="messageTitle"
-      @on-close="messageClose"
-      @prompt-confirm="messageConfirm"
-    />
-  </div>
-</template>
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .time-picker-small {
   transform: scale(0.5);
   transform-origin: top left;
@@ -531,10 +530,6 @@
     display: none;
   }
 }
-
-// .time-picker-small :deep(.v-time-picker-title) {
-//   font-size: 1.2rem;
-// }
 .time-picker-small :deep(.v-picker__body) {
   font-size: 1.2rem;
 }

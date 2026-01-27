@@ -1,370 +1,3 @@
-<script setup>
-  import { isAfter, isBefore } from 'date-fns'
-  import { ref } from 'vue'
-  import api from '@/api/index.js'
-  import PromptDialog from '@/components/PromptDialog.vue'
-  import { formatDate } from '@/utils/date'
-
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
-  const messageType = ref('')
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    userInfo: {
-      type: Object,
-      default: () => ({}),
-    },
-  })
-  const emits = defineEmits(['on-close'])
-  const currentPage = ref('home')
-  const loading = ref(false)
-
-  function changePwd () {
-    currentPage.value = 'changePwd'
-  }
-
-  // 變更密碼
-  const cpFormRef = ref()
-  const cpForm = ref({
-    orgPassword: '',
-    password: '',
-    password2: '',
-  })
-
-  const rules = ref({
-    orgPasswordRules: [
-      v => !!v || '原密碼為必填',
-    ],
-    passwordRules: [
-      v => !!v || '新密碼為必填',
-      v => /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的新密碼',
-    ],
-    passwordRules2: [
-      v => !!v || '再次輸入新密碼為必填',
-      v => v === cpForm.value.password || '兩次輸入的新密碼不一致',
-    ],
-  })
-
-  // 變更密碼
-  async function onSendChangePwd () {
-    const { valid } = await cpFormRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-
-    const payload = {
-      userId: props.userInfo.userId,
-      password: cpForm.value.password,
-    }
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/update_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-        backHome()
-      } else {
-        if (returnCode === -1) {
-          messageTitle.value = '訊息通知'
-          message.value = `${returnMsg}`
-          isConfirmBtn.value = false
-          messageDialog.value = true
-        }
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  function backHome () {
-    currentPage.value = 'home'
-  }
-
-  async function setSubAccount () {
-    currentPage.value = 'subAccount'
-    await fetchMemberList()
-  }
-
-  // 子帳號設定
-  const memberList = ref([])
-  const saFormRef = ref()
-  const saForm = ref({
-    acc_name: '',
-    account: '',
-    password: '',
-    password2: '',
-    enableTime: '',
-    disableTime: '',
-  })
-  const isShowPassword = ref(false)
-  const isShowPassword2 = ref(false)
-
-  const saRules = ref({
-    accNameRules: [
-      v => !!v || '使用者姓名為必填',
-    ],
-    accountRules: [
-      v => !!v || '帳號為必填',
-    // v => /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的帳號'
-    ],
-    passwordRules: [
-      v => !!v || '密碼為必填',
-      v => /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的密碼',
-    ],
-    passwordRules2: [
-      v => !!v || '再次輸入密碼為必填',
-      v => v === saForm.value.password || '兩次輸入的密碼不一致',
-    ],
-    editPasswordRules: [
-      v => !v || /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的密碼',
-    ],
-    editPasswordRules2: [
-      v => !v || v === saForm.value.password || '兩次輸入的重置新密碼不一致',
-    ],
-    enableTimeRule: [
-      v => !!v || '請選擇起始日期',
-      v => {
-        if (!v || !saForm.value.disableTime) return true
-
-        const start = new Date(v)
-        const end = new Date(saForm.value.disableTime)
-        if (!start || !end) return true
-        return !isAfter(start, end) || '起始日期不能晚於結束日期'
-      },
-    ],
-    disableTimeRule: [
-      v => !!v || '請選擇結束日期',
-      v => {
-        if (!v || !saForm.value.enableTime) return true
-
-        const start = new Date(saForm.value.enableTime)
-        const end = new Date(v)
-        if (!start || !end) return true
-        return !isBefore(end, start) || '結束日期不能早於起始日期'
-      },
-    ],
-  })
-
-  // 修改 / 刪除子帳號按鈕
-  function edit (member) {
-    currentPage.value = 'edit'
-    const { account, disableTime, enableTime, userId } = member
-    saForm.value = {
-      ...saForm.value,
-      account,
-      enableTime,
-      disableTime,
-      userId,
-    }
-  // console.log('修改 / 刪除子帳號', saForm.value)
-  }
-
-  // 新增子帳號按鈕
-  function add () {
-    currentPage.value = 'add'
-    saForm.value = {
-      acc_name: '',
-      account: '',
-      password: '',
-      password2: '',
-      enableTime: '',
-      disableTime: '',
-    }
-  }
-
-  // 刪除子帳號
-  function delAccount () {
-    const { account } = saForm.value
-    messageTitle.value = '訊息通知'
-    message.value = `子帳號 [ ${account} ] 刪除後將無法復原，確定要刪除嗎？`
-    isConfirmBtn.value = true
-    messageDialog.value = true
-    messageType.value = 'deleteSubAccount'
-  }
-  async function deleteSubAccount () {
-    const { valid } = await saFormRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-
-    const { userId } = saForm.value
-    const payload = {
-      userId: userId,
-    }
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/delete_Ch_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg } = res
-      if (returnCode === 0) {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-        await fetchMemberList()
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 取得子帳號列表
-  async function fetchMemberList () {
-    backSubAccount()
-    const payload = {
-      vendorId: props.userInfo.vendorId,
-    }
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/select_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        memberList.value = data
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 編輯 儲存子帳號
-  async function editSubAccount () {
-    const { valid } = await saFormRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-
-    const { userId, password, enableTime, disableTime } = saForm.value
-    const payload = {
-      userId: userId,
-      password,
-      enableTime: formatDate(enableTime),
-      disableTime: formatDate(disableTime),
-    }
-    console.log('儲存子帳號', payload)
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/update_Ch_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg } = res
-      if (returnCode === 0) {
-        await fetchMemberList()
-        saFormRef.value.reset()
-        backSubAccount()
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 新增 儲存子帳號
-  async function saveSubAccount () {
-    const { valid } = await saFormRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-
-    const { acc_name, account, password, enableTime, disableTime } = saForm.value
-    const payload = {
-      vendorId: props.userInfo.vendorId,
-      identity: '0',
-      acc_name,
-      account,
-      password,
-      enableTime: formatDate(enableTime),
-      disableTime: formatDate(disableTime),
-    }
-    // console.log('儲存子帳號', payload)
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/create_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        await fetchMemberList()
-        saFormRef.value.reset()
-        backSubAccount()
-      } else if (returnCode === 999) {
-        messageTitle.value = '訊息通知'
-        message.value = `帳號已註冊，請重新設定。`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 確認 message
-  function messageConfirm () {
-    if (messageType.value === 'deleteSubAccount') {
-      deleteSubAccount()
-      messageType.value = ''
-      return
-    }
-    messageDialog.value = false
-  }
-  // 離開 message
-  function messageClose () {
-    messageDialog.value = false
-  }
-
-  // 回到子帳號列表
-  function backSubAccount () {
-    currentPage.value = 'subAccount'
-  }
-
-  // 離開此頁面
-  function onClose () {
-    emits('on-close')
-  }
-</script>
-
 <template>
   <div id="changePassword" class="h-100">
     <!-- 修改子帳號及密碼 - 首頁 -->
@@ -867,7 +500,372 @@
     />
   </div>
 </template>
+<script setup>
+  import { isAfter, isBefore } from 'date-fns'
+  import { ref } from 'vue'
+  import api from '@/api/index.js'
+  import PromptDialog from '@/components/PromptDialog.vue'
+  import { formatDate } from '@/utils/date'
 
+  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+
+  // Prompt Message Dialog
+  const messageDialog = ref(false)
+  const messageTitle = ref('')
+  const message = ref('')
+  const isConfirmBtn = ref(false)
+  const messageType = ref('')
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object,
+      default: () => ({}),
+    },
+    userInfo: {
+      type: Object,
+      default: () => ({}),
+    },
+  })
+  const emits = defineEmits(['on-close'])
+  const currentPage = ref('home')
+  const loading = ref(false)
+
+  function changePwd () {
+    currentPage.value = 'changePwd'
+  }
+
+  // 變更密碼
+  const cpFormRef = ref()
+  const cpForm = ref({
+    orgPassword: '',
+    password: '',
+    password2: '',
+  })
+
+  const rules = ref({
+    orgPasswordRules: [
+      v => !!v || '原密碼為必填',
+    ],
+    passwordRules: [
+      v => !!v || '新密碼為必填',
+      v => /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的新密碼',
+    ],
+    passwordRules2: [
+      v => !!v || '再次輸入新密碼為必填',
+      v => v === cpForm.value.password || '兩次輸入的新密碼不一致',
+    ],
+  })
+
+  // 變更密碼
+  async function onSendChangePwd () {
+    const { valid } = await cpFormRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+
+    const payload = {
+      userId: props.userInfo.userId,
+      password: cpForm.value.password,
+    }
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/update_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+        backHome()
+      } else {
+        if (returnCode === -1) {
+          messageTitle.value = '訊息通知'
+          message.value = `${returnMsg}`
+          isConfirmBtn.value = false
+          messageDialog.value = true
+        }
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  function backHome () {
+    currentPage.value = 'home'
+  }
+
+  async function setSubAccount () {
+    currentPage.value = 'subAccount'
+    await fetchMemberList()
+  }
+
+  // 子帳號設定
+  const memberList = ref([])
+  const saFormRef = ref()
+  const saForm = ref({
+    acc_name: '',
+    account: '',
+    password: '',
+    password2: '',
+    enableTime: '',
+    disableTime: '',
+  })
+  const isShowPassword = ref(false)
+  const isShowPassword2 = ref(false)
+
+  const saRules = ref({
+    accNameRules: [
+      v => !!v || '使用者姓名為必填',
+    ],
+    accountRules: [
+      v => !!v || '帳號為必填',
+    // v => /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的帳號'
+    ],
+    passwordRules: [
+      v => !!v || '密碼為必填',
+      v => /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的密碼',
+    ],
+    passwordRules2: [
+      v => !!v || '再次輸入密碼為必填',
+      v => v === saForm.value.password || '兩次輸入的密碼不一致',
+    ],
+    editPasswordRules: [
+      v => !v || /^[a-zA-Z0-9]{8}$/.test(v) || '請輸入有效的密碼',
+    ],
+    editPasswordRules2: [
+      v => !v || v === saForm.value.password || '兩次輸入的重置新密碼不一致',
+    ],
+    enableTimeRule: [
+      v => !!v || '請選擇起始日期',
+      v => {
+        if (!v || !saForm.value.disableTime) return true
+
+        const start = new Date(v)
+        const end = new Date(saForm.value.disableTime)
+        if (!start || !end) return true
+        return !isAfter(start, end) || '起始日期不能晚於結束日期'
+      },
+    ],
+    disableTimeRule: [
+      v => !!v || '請選擇結束日期',
+      v => {
+        if (!v || !saForm.value.enableTime) return true
+
+        const start = new Date(saForm.value.enableTime)
+        const end = new Date(v)
+        if (!start || !end) return true
+        return !isBefore(end, start) || '結束日期不能早於起始日期'
+      },
+    ],
+  })
+
+  // 修改 / 刪除子帳號按鈕
+  function edit (member) {
+    currentPage.value = 'edit'
+    const { account, disableTime, enableTime, userId } = member
+    saForm.value = {
+      ...saForm.value,
+      account,
+      enableTime,
+      disableTime,
+      userId,
+    }
+  // console.log('修改 / 刪除子帳號', saForm.value)
+  }
+
+  // 新增子帳號按鈕
+  function add () {
+    currentPage.value = 'add'
+    saForm.value = {
+      acc_name: '',
+      account: '',
+      password: '',
+      password2: '',
+      enableTime: '',
+      disableTime: '',
+    }
+  }
+
+  // 刪除子帳號
+  function delAccount () {
+    const { account } = saForm.value
+    messageTitle.value = '訊息通知'
+    message.value = `子帳號 [ ${account} ] 刪除後將無法復原，確定要刪除嗎？`
+    isConfirmBtn.value = true
+    messageDialog.value = true
+    messageType.value = 'deleteSubAccount'
+  }
+  async function deleteSubAccount () {
+    const { valid } = await saFormRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+
+    const { userId } = saForm.value
+    const payload = {
+      userId: userId,
+    }
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/delete_Ch_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg } = res
+      if (returnCode === 0) {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+        await fetchMemberList()
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 取得子帳號列表
+  async function fetchMemberList () {
+    backSubAccount()
+    const payload = {
+      vendorId: props.userInfo.vendorId,
+    }
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/select_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        memberList.value = data
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 編輯 儲存子帳號
+  async function editSubAccount () {
+    const { valid } = await saFormRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+
+    const { userId, password, enableTime, disableTime } = saForm.value
+    const payload = {
+      userId: userId,
+      password,
+      enableTime: formatDate(enableTime),
+      disableTime: formatDate(disableTime),
+    }
+    console.log('儲存子帳號', payload)
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/update_Ch_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg } = res
+      if (returnCode === 0) {
+        await fetchMemberList()
+        saFormRef.value.reset()
+        backSubAccount()
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 新增 儲存子帳號
+  async function saveSubAccount () {
+    const { valid } = await saFormRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+
+    const { acc_name, account, password, enableTime, disableTime } = saForm.value
+    const payload = {
+      vendorId: props.userInfo.vendorId,
+      identity: '0',
+      acc_name,
+      account,
+      password,
+      enableTime: formatDate(enableTime),
+      disableTime: formatDate(disableTime),
+    }
+    // console.log('儲存子帳號', payload)
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/create_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        await fetchMemberList()
+        saFormRef.value.reset()
+        backSubAccount()
+      } else if (returnCode === 999) {
+        messageTitle.value = '訊息通知'
+        message.value = `帳號已註冊，請重新設定。`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 確認 message
+  function messageConfirm () {
+    if (messageType.value === 'deleteSubAccount') {
+      deleteSubAccount()
+      messageType.value = ''
+      return
+    }
+    messageDialog.value = false
+  }
+  // 離開 message
+  function messageClose () {
+    messageDialog.value = false
+  }
+
+  // 回到子帳號列表
+  function backSubAccount () {
+    currentPage.value = 'subAccount'
+  }
+
+  // 離開此頁面
+  function onClose () {
+    emits('on-close')
+  }
+</script>
 <style lang="scss" scoped>
 .custom-height {
   height: 60px;

@@ -1,139 +1,3 @@
-<script setup>
-  import { isAfter, isBefore } from 'date-fns'
-  import { ref, watch } from 'vue'
-  import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
-  import { formatDate } from '@/utils/date'
-
-  // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    memberInfo: {
-      type: Object,
-      default: () => ({}),
-    },
-  })
-  const emits = defineEmits(['closeForm'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-
-  // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
-
-  const loading = ref(false)
-
-  // searchForm
-  const searchFormRef = ref()
-  const searchForm = ref({
-    start_time: '',
-    end_time: '',
-  })
-  const rules = ref({
-    startDateRule: [
-      v => !!v || '請選擇起始日期',
-      v => {
-        if (!v || !searchForm.value.end_time) return true
-
-        const start = new Date(v)
-        const end = new Date(searchForm.value.end_time)
-        if (!start || !end) return true
-        return !isAfter(start, end) || '起始日期不能晚於結束日期'
-      },
-    ],
-    endDateRule: [
-      v => !!v || '請選擇結束日期',
-      v => {
-        if (!v || !searchForm.value.start_time) return true
-
-        const start = new Date(searchForm.value.start_time)
-        const end = new Date(v)
-        if (!start || !end) return true
-        return !isBefore(end, start) || '結束日期不能早於起始日期'
-      },
-    ],
-  })
-  const carList = ref([])
-
-  // 商店折抵查詢
-  async function onSearch () {
-    const { valid } = await searchFormRef.value.validate()
-    // 檢核欄位
-    if (!valid) return
-    const { start_time, end_time } = searchForm.value
-    const payload = {
-      vendorId: props.memberInfo.vendorId,
-      start_time: formatDate(start_time),
-      end_time: formatDate(end_time),
-    }
-
-    // 送出表單
-    loading.value = true
-    const apiUrl = '/member/grand_hotel/select_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
-    try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
-      if (returnCode === 0) {
-        if (data.length === 0) {
-          messageTitle.value = '訊息通知'
-          message.value = `查無折抵記錄，請更改查詢條件後再試。`
-          isConfirmBtn.value = false
-          messageDialog.value = true
-          carList.value = []
-          return
-        }
-        carList.value = data
-      } else {
-        messageTitle.value = '訊息通知'
-        message.value = `${returnMsg}`
-        isConfirmBtn.value = false
-        messageDialog.value = true
-      }
-    } catch (error) {
-      console.log({ err: error })
-    } finally {
-      loading.value = false
-    }
-
-  // memberList.value = memberListRef.value
-
-  // 正常狀況下
-  // const newParking = {
-  //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
-  //   carNumber: carNumber,
-  //   startDate: formatDate(startDate),
-  //   endDate: formatDate(endDate)
-  // }
-  // console.log('送出表單', newParking)
-  // parkingList.value.push(newParking)
-  // searchFormRef.value.reset()
-
-  // 重複登記狀況下
-  // messageDialog.value = true
-  // messageTitle.value = '無法登記'
-  // message.value = `本車號已登記，須先刪除原本登記日期後才能再次申請。`
-  // isConfirmBtn.value = false
-  }
-
-  // 關閉表單
-  function onCloseForm () {
-    emits('closeForm')
-  }
-
-  // 確認 message
-  function messageConfirm () {
-    messageDialog.value = false
-  }
-  // 離開 message
-  function messageClose () {
-    messageDialog.value = false
-  }
-</script>
-
 <template>
   <div id="checkin" class="h-100">
     <v-card class="rounded-lg bordered border-md bg-white h-100" variant="outlined">
@@ -157,9 +21,9 @@
               <v-date-input
                 v-model="searchForm.start_time"
                 append-inner-icon="fa:far fa-calendar-alt"
+                bg-color="white"
                 color="blue-darken-2"
                 density="compact"
-                bg-color="white"
                 :display-format="formatDate"
                 placeholder="起：2026-01-01"
                 prepend-icon=""
@@ -172,9 +36,9 @@
               <v-date-input
                 v-model="searchForm.end_time"
                 append-inner-icon="fa:far fa-calendar-alt"
+                bg-color="white"
                 color="blue-darken-2"
                 density="compact"
-                bg-color="white"
                 :display-format="formatDate"
                 placeholder="迄：2026-01-01"
                 prepend-icon=""
@@ -295,3 +159,138 @@
     />
   </div>
 </template>
+<script setup>
+  import { isAfter, isBefore } from 'date-fns'
+  import { ref } from 'vue'
+  import api from '@/api'
+  import PromptDialog from '@/components/PromptDialog.vue'
+  import { formatDate } from '@/utils/date'
+
+  // Props
+  const props = defineProps({
+    activeTab: {
+      type: Object,
+      default: () => ({}),
+    },
+    memberInfo: {
+      type: Object,
+      default: () => ({}),
+    },
+  })
+  const emits = defineEmits(['close-form'])
+  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+
+  // Prompt Message Dialog
+  const messageDialog = ref(false)
+  const messageTitle = ref('')
+  const message = ref('')
+  const isConfirmBtn = ref(false)
+
+  const loading = ref(false)
+
+  // searchForm
+  const searchFormRef = ref()
+  const searchForm = ref({
+    start_time: '',
+    end_time: '',
+  })
+  const rules = ref({
+    startDateRule: [
+      v => !!v || '請選擇起始日期',
+      v => {
+        if (!v || !searchForm.value.end_time) return true
+
+        const start = new Date(v)
+        const end = new Date(searchForm.value.end_time)
+        if (!start || !end) return true
+        return !isAfter(start, end) || '起始日期不能晚於結束日期'
+      },
+    ],
+    endDateRule: [
+      v => !!v || '請選擇結束日期',
+      v => {
+        if (!v || !searchForm.value.start_time) return true
+
+        const start = new Date(searchForm.value.start_time)
+        const end = new Date(v)
+        if (!start || !end) return true
+        return !isBefore(end, start) || '結束日期不能早於起始日期'
+      },
+    ],
+  })
+  const carList = ref([])
+
+  // 商店折抵查詢
+  async function onSearch () {
+    const { valid } = await searchFormRef.value.validate()
+    // 檢核欄位
+    if (!valid) return
+    const { start_time, end_time } = searchForm.value
+    const payload = {
+      vendorId: props.memberInfo.vendorId,
+      start_time: formatDate(start_time),
+      end_time: formatDate(end_time),
+    }
+
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/select_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        if (data.length === 0) {
+          messageTitle.value = '訊息通知'
+          message.value = `查無折抵記錄，請更改查詢條件後再試。`
+          isConfirmBtn.value = false
+          messageDialog.value = true
+          carList.value = []
+          return
+        }
+        carList.value = data
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+
+  // memberList.value = memberListRef.value
+
+  // 正常狀況下
+  // const newParking = {
+  //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
+  //   carNumber: carNumber,
+  //   startDate: formatDate(startDate),
+  //   endDate: formatDate(endDate)
+  // }
+  // console.log('送出表單', newParking)
+  // parkingList.value.push(newParking)
+  // searchFormRef.value.reset()
+
+  // 重複登記狀況下
+  // messageDialog.value = true
+  // messageTitle.value = '無法登記'
+  // message.value = `本車號已登記，須先刪除原本登記日期後才能再次申請。`
+  // isConfirmBtn.value = false
+  }
+
+  // 關閉表單
+  function onCloseForm () {
+    emits('close-form')
+  }
+
+  // 確認 message
+  function messageConfirm () {
+    messageDialog.value = false
+  }
+  // 離開 message
+  function messageClose () {
+    messageDialog.value = false
+  }
+</script>
