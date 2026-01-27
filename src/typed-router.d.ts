@@ -22,6 +22,7 @@ declare module 'vue-router/auto-routes' {
     '/[...path]': RouteRecordInfo<'/[...path]', '/:path(.*)', { path: ParamValue<true> }, { path: ParamValue<false> }>,
     '/banquet': RouteRecordInfo<'/banquet', '/banquet', Record<never, never>, Record<never, never>>,
     '/counter': RouteRecordInfo<'/counter', '/counter', Record<never, never>, Record<never, never>>,
+    '/counterLogin': RouteRecordInfo<'/counterLogin', '/counterLogin', Record<never, never>, Record<never, never>>,
     '/parking': RouteRecordInfo<'/parking', '/parking', Record<never, never>, Record<never, never>>,
     '/shop': RouteRecordInfo<'/shop', '/shop', Record<never, never>, Record<never, never>>,
   }
@@ -51,6 +52,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/counter.vue': {
       routes: '/counter'
+      views: never
+    }
+    'src/pages/counterLogin.vue': {
+      routes: '/counterLogin'
       views: never
     }
     'src/pages/parking.vue': {

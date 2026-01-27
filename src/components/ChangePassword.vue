@@ -500,23 +500,48 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
-  import api from '@/api/index.js'
+  import api from '@/api/index.ts'
   import PromptDialog from '@/components/PromptDialog.vue'
-  import { formatDate } from '@/utils/date'
+  import { formatDate } from '@/utils/date.ts'
 
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  const BaseUrl = import.meta.env.VITE_API_BASE_URL
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
-  const messageType = ref('')
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
+  const messageType = ref<string>('')
 
   // Props
+  interface MemberInfo {
+    userId: number
+    identity: string
+    acc_name: string
+    account: string
+    vendorId: number
+    parkId: number
+    unitId: number
+    forTest: string
+    vendor_name: string
+    store_type: number
+    remainPoints: number
+    slipStyle: number
+    slipHour: string
+    createTime: string
+    deleteTime: string
+    note: string
+    enableTime: string
+    disableTime: string
+  }
+  interface Props {
+    activeTab: TabItem
+    userInfo: MemberInfo
+  }
   const props = defineProps({
     activeTab: {
       type: Object,

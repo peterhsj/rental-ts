@@ -28,7 +28,7 @@
       />
     </v-container>
     <!-- 臨櫃登記 -->
-    <v-container v-if="activeTab.value === 'counterCheckIn'" id="counterCheckIn" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'counterCheckIn'" id="counterCheckIn" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <CheckinForm
         :active-tab="activeTab"
         :user-id="memberInfo && memberInfo.userId"
@@ -36,7 +36,7 @@
       />
     </v-container>
     <!-- 自助登記 -->
-    <v-container v-if="activeTab.value === 'selfCheckIn'" id="selfCheckIn" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'selfCheckIn'" id="selfCheckIn" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <SelfCheckinForm
         :active-tab="activeTab"
         :user-id="memberInfo && memberInfo.userId"
@@ -44,21 +44,21 @@
       />
     </v-container>
     <!-- 登記查詢 -->
-    <v-container v-if="activeTab.value === 'search'" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'search'" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <SearchForm
         :active-tab="activeTab"
         @close-form="closeCheckinForm"
       />
     </v-container>
     <!-- 登出 -->
-    <v-container v-if="activeTab.value === 'logout'" id="logout" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'logout'" id="logout" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <Logout
         :active-tab="activeTab"
         @on-login="login"
       />
     </v-container>
     <!-- 修改密碼及子帳號 -->
-    <v-container v-if="activeTab.value === 'changePassword'" id="changePassword" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'changePassword' && memberInfo" id="changePassword" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <ChangePassword
         :active-tab="activeTab"
         :user-info="memberInfo"
@@ -76,34 +76,66 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { onMounted, onUnmounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import ChangePassword from '@/components/ChangePassword.vue'
+  import CheckinForm from '@/components/counter/CheckinForm.vue'
+  import SearchForm from '@/components/counter/SearchForm.vue'
+  import SelfCheckinForm from '@/components/counter/SelfCheckinForm.vue'
   import Logout from '@/components/Logout.vue'
   import PromptDialog from '@/components/PromptDialog.vue'
   import TabList from '@/components/TabList.vue'
   import { counterList } from '@/utils/site.ts'
-  import CheckinForm from '@/views/Counter/CheckinForm.vue'
-  import SearchForm from '@/views/Counter/SearchForm.vue'
-  import SelfCheckinForm from '@/views/Counter/SelfCheckinForm.vue'
 
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  interface MemberInfo {
+    userId: number
+    identity: string
+    acc_name: string
+    account: string
+    // userphone: string
+    // useraddress: string
+    vendorId: number
+    parkId: number
+    unitId: number
+    forTest: string
+    vendor_name: string
+    // name: string
+    // phone: string
+    // address: string
+    // tax: string
+    // mail: string
+    // vendorTitle: string
+    store_type: number
+    remainPoints: number
+    slipStyle: number
+    // openDateFree: number
+    // slipCode: string
+    slipHour: string
+    createTime: string
+    deleteTime: string
+    note: string
+    enableTime: string
+    disableTime: string
+  }
+
+  const BaseUrl = import.meta.env.VITE_API_BASE_URL
   const router = useRouter()
-  const memberInfo = ref(null)
+  const memberInfo = ref<MemberInfo | null>(null)
 
-  const activeTab = ref({})
-  const isEdit = ref(false)
-  const isMobile = ref(false)
+  const activeTab = ref<TabItem | null>(null)
+  const isEdit = ref<boolean>(false)
+  const isMobile = ref<boolean>(false)
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
   // 臨櫃登記選單切換
-  function setActiveTab (tab) {
+  function setActiveTab (tab: TabItem): void {
     activeTab.value = tab
     isEdit.value = true
 
@@ -115,26 +147,26 @@
   }
 
   // 關閉停車輸入表單
-  function closeCheckinForm () {
-    activeTab.value = {}
+  function closeCheckinForm (): void {
+    activeTab.value = null
     isEdit.value = false
   }
 
   // 登入
-  function login () {
-    activeTab.value = {}
+  function login (): void {
+    activeTab.value = null
     isEdit.value = false
     router.push('/CounterLogin')
   }
 
   // 離開
-  function close () {
-    activeTab.value = {}
+  function close (): void {
+    activeTab.value = null
     isEdit.value = false
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
   }
   // 離開 message
@@ -143,26 +175,27 @@
   }
 
   // 偵測手持裝置
-  function checkIsMobile () {
+  function checkIsMobile (): void {
     isMobile.value = window.innerWidth <= 960
   }
   // 檢查 localStorage 並 取得 memberInfo 值
-  function init () {
+  function init (): void {
     const memberStorage = localStorage.getItem('memberInfo')
     if (memberStorage) {
-      memberInfo.value = JSON.parse(localStorage.getItem('memberInfo'))
+      const { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime} = JSON.parse(memberStorage)
+      memberInfo.value = { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime}
     } else {
-      router.push('/CounterLogin')
+      router.push('/counterLogin')
     }
   }
 
-  onMounted(() => {
+  onMounted((): void => {
     init()
     checkIsMobile()
     window.addEventListener('resize', checkIsMobile)
   })
 
-  onUnmounted(() => {
+  onUnmounted((): void => {
     window.removeEventListener('resize', checkIsMobile)
   })
 </script>

@@ -34,31 +34,31 @@
     {
       value: 'parking',
       text: '住宿車輛自助登記',
-      path: '/Parking',
+      path: '/parking',
       icon: '/images/car.svg',
     },
     {
       value: 'counter',
       text: '住宿車輛臨櫃登記',
-      path: '/CounterLogin',
+      path: '/counterLogin',
       icon: '/images/bed.svg',
     },
     {
       value: 'shop',
       text: '商店折抵',
-      path: '/ShopLogin',
+      path: '/shopLogin',
       icon: '/images/shoppingCart.svg',
     },
     {
       value: 'banquet',
       text: '宴會廳自助折抵',
-      path: '/BanquetLogin',
+      path: '/banquetLogin',
       icon: '/images/scanner.svg',
     },
     {
       value: 'customer',
       text: '客戶手機操作',
-      path: '/Customer',
+      path: '/customer',
       icon: '/images/scanner.svg',
     },
   ]

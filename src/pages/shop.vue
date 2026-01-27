@@ -77,10 +77,10 @@
   import ChangePassword from '@/components/ChangePassword.vue'
   import Logout from '@/components/Logout.vue'
   import PromptDialog from '@/components/PromptDialog.vue'
+  import ParkingDeduction from '@/components/shop/ParkingDeduction.vue'
+  import SearchForm from '@/components/shop/SearchForm.vue'
   import TabList from '@/compo nents/TabList.vue'
   import { shopList } from '@/utils/site.ts'
-  import ParkingDeduction from '@/views/Shop/ParkingDeduction.vue'
-  import SearchForm from '@/views/Shop/SearchForm.vue'
 
   const BaseUrl = import.meta.env.VITE_API_DOMAIN
   const router = useRouter()

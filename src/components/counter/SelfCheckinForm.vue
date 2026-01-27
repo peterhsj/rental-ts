@@ -75,7 +75,7 @@
           <v-list>
             <v-list-item
               v-for="parking in parkingList"
-              :key="parking.id"
+              :key="parking.phone"
               class="py-2"
             >
               <div class="d-flex justify-space-between w-100">
@@ -131,44 +131,57 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
   import api from '@/api'
   import PromptDialog from '@/components/PromptDialog.vue'
-  import { formatDate } from '@/utils/date'
+  import { formatDate } from '@/utils/date.ts'
 
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    userID: {
-      type: Number,
-      default: 0,
-    },
+  interface Props {
+    activeTab?: TabItem
+    userID?: number
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
+    userID: 0,
   })
-  const emits = defineEmits(['close-form'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  const emits = defineEmits<{
+    'close-form': []
+  }>()
+  const BaseUrl = import.meta.env.VITE_API_BASE_URL
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
-  const loading = ref(false)
+  const loading = ref<boolean>(false)
   // checkin
-  const checkinForm = ref({
+  interface CheckinForm {
+    phone: string
+    reserve_start_date: string
+    reserve_end_date: string
+    note: string
+  }
+  const checkinForm = ref<CheckinForm>({
     phone: '',
     reserve_start_date: '',
     reserve_end_date: '',
     note: '',
   })
-  const delItem = ref(null)
-  const checkinFormRef = ref()
-  const rules = ref({
+  const delItem = ref<CheckinForm | null>(null)
+  const checkinFormRef = ref<any>()
+
+  interface Rules {
+    phoneRules: Array<(v: string) => string | boolean>
+    startDateRule: Array<(v: string) => string | boolean>
+    endDateRule: Array<(v: string) => string | boolean>
+  }
+  const rules = ref<Rules>({
     phoneRules: [
       v => !!v || '手機號碼為必填',
       v => /^\d{10}$/.test(v) || '請輸入有效的手機號碼',
@@ -195,10 +208,10 @@
       },
     ],
   })
-  const parkingList = ref([])
+  const parkingList = ref<CheckinForm[]>([])
 
-  // 送出表單
-  async function addParking () {
+  // 新增停車紀錄
+  async function addParking (): Promise<void> {
     const { valid } = await checkinFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
@@ -216,7 +229,7 @@
       if (isDuplicate) {
         messageDialog.value = true
         messageTitle.value = '無法登記'
-        message.value = `${returnMsg}`
+        message.value = '重複登記相同手機號碼'
         isConfirmBtn.value = false
         return
       }
@@ -226,7 +239,7 @@
   }
 
   // 刪除登記車號
-  function delParking (item) {
+  function delParking (item: CheckinForm) {
     delItem.value = item
     messageDialog.value = true
     messageTitle.value = '刪除登記手機號碼'
@@ -236,9 +249,12 @@
 
   // 刪除登記車號確認
   function delParkingConfirm () {
-    const index = parkingList.value.findIndex(p => p.id === delItem.value.id)
-    if (index !== -1) {
-      parkingList.value.splice(index, 1)
+    const { phone } = delItem.value as CheckinForm
+    if (phone) {
+      const index = parkingList.value.findIndex(p => p.phone === phone)
+      if (index !== -1) {
+        parkingList.value.splice(index, 1)
+      }
     }
   }
 

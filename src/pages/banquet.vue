@@ -73,13 +73,13 @@
 <script setup>
   import { onMounted, onUnmounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import QrCode from '@/components/banquet/QrCode.vue'
+  import SearchForm from '@/components/banquet/SearchForm.vue'
   import ChangePassword from '@/components/ChangePassword.vue'
   import Logout from '@/components/Logout.vue'
   import PromptDialog from '@/components/PromptDialog.vue'
   import TabList from '@/components/TabList.vue'
   import { banquetList } from '@/utils/site.ts'
-  import QrCode from '@/views/Banquet/QrCode.vue'
-  import SearchForm from '@/views/Banquet/SearchForm.vue'
 
   const BaseUrl = import.meta.env.VITE_API_DOMAIN
   const router = useRouter()

@@ -105,8 +105,8 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import api from '@/api'
   import Captcha from '@/components/Captcha.vue'
   import CommonOverlay from '@/components/CommonOverlay.vue'
@@ -117,11 +117,16 @@
     captcha: string
   }
 
+  interface Props {
+    currentPath?: string
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    currentPath: 'counterLogin',
+  })
+
   const BaseUrl = import.meta.env.VITE_BASE_URL
 
-  const route = useRoute()
   const router = useRouter()
-  const currentPath = ref<HeaderKeys>('CounterLogin')
 
   // Prompt Message Dialog
   const messageDialog = ref(false)
@@ -130,7 +135,7 @@
   const isConfirmBtn = ref(false)
 
   // 定義允許的路由類型
-  type HeaderKeys = 'CounterLogin' | 'ShopLogin' | 'BanquetLogin'
+  type HeaderKeys = 'counterLogin' | 'shopLogin' | 'banquetLogin'
 
   interface HeaderConfig {
     title: string
@@ -139,17 +144,17 @@
   }
 
   const headers: Record<HeaderKeys, HeaderConfig> = {
-    CounterLogin: {
+    counterLogin: {
       title: '住宿車輛登記 - 登入',
       bgColor: 'bg-grey-lighten-2',
       icon: '/images/bed.svg',
     },
-    ShopLogin: {
+    shopLogin: {
       title: '商店消費折抵 - 登入',
       bgColor: 'bg-orange-lighten-5',
       icon: '/images/shoppingCart.svg',
     },
-    BanquetLogin: {
+    banquetLogin: {
       title: '宴會廳消費折抵 - 登入',
       bgColor: 'rental__bg--light-orange',
       icon: '/images/scanner.svg',
@@ -182,21 +187,9 @@
   }
 
   const currentHeader = computed(() => {
-    const path = currentPath.value
-    return headers[path] || headers.CounterLogin
+    const path = props.currentPath as HeaderKeys
+    return headers[path] || headers.counterLogin
   })
-
-  watch(
-    () => route.path,
-    newPath => {
-      const pathKey = newPath.slice(1) as HeaderKeys
-      // 驗證 key 是否存在
-      if (pathKey in headers) {
-        currentPath.value = pathKey
-      }
-    },
-    { immediate: true },
-  )
 
   // 接收 Captcha 組件傳來的驗證碼
   function setCaptchaCode (code: string): void {
@@ -208,8 +201,20 @@
     const { valid } = await loginFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
+
+    let storeType = null
+    if (props.currentPath === 'counterLogin') {
+      storeType = 4
+    }
+    if (props.currentPath === 'shopLogin') {
+      storeType = 1
+    }
+    if (props.currentPath === 'banquetLogin') {
+      storeType = 5
+    }
     const { account, password } = loginForm.value
     const payload = {
+      store_type: storeType,
       account,
       password,
     }
@@ -230,16 +235,16 @@
         localStorage.setItem('memberInfo', JSON.stringify(data))
 
         // 跳轉頁面
-        if (currentPath.value === 'CounterLogin') {
-          router.push('/Counter')
+        if (props.currentPath === 'counterLogin') {
+          router.push('/counter')
           return
         }
-        if (currentPath.value === 'ShopLogin') {
-          router.push('/Shop')
+        if (props.currentPath === 'shopLogin') {
+          router.push('/shop')
           return
         }
-        if (currentPath.value === 'BanquetLogin') {
-          router.push('/Banquet')
+        if (props.currentPath === 'banquetLogin') {
+          router.push('/banquet')
           return
         }
       } else {

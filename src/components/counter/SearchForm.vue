@@ -59,8 +59,8 @@
         <v-card v-if="parkingList.length > 0" class="mt-5 pa-2 rounded-lg bordered border-md bg-white flex-grow-1 overflow-y-auto" variant="outlined">
           <v-list>
             <v-list-item
-              v-for="parking in parkingList"
-              :key="parking.id"
+              v-for="(parking, index) in parkingList"
+              :key="index"
               class="py-2"
             >
               <div class="d-flex flex-column w-100">
@@ -136,35 +136,46 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { ref } from 'vue'
   import api from '@/api'
   import PromptDialog from '@/components/PromptDialog.vue'
 
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
+  interface Props {
+    activeTab?: TabItem
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
   })
-  const emits = defineEmits(['close-form'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  const emits = defineEmits<{
+    'close-form': []
+  }>()
+  const BaseUrl = import.meta.env.VITE_API_BASE_URL
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
-  const loading = ref(false)
-  // checkin
-  const searchForm = ref({
+  const loading = ref<boolean>(false)
+  // searchForm
+  interface SearchForm {
+    phone: string
+    license_plate: string
+  }
+  const searchForm = ref<SearchForm>({
     phone: '',
     license_plate: '',
   })
-  const searchFormRef = ref()
-  const rules = ref({
+  const searchFormRef = ref<any>()
+  interface Rules {
+    phoneRules: Array<(v: string) => boolean | string>
+    carRules: Array<(v: string) => boolean | string>
+  }
+  const rules = ref<Rules>({
     phoneRules: [
       v => !v || /^\d{10}$/.test(v) || '請輸入有效的手機號碼',
     ],
@@ -173,11 +184,20 @@
     ],
   })
 
-  // Fake parking list
-  const parkingList = ref([])
+  // parking list
+  interface ParkingItem {
+    id: number
+    reserve_type: string
+    reserve_acc: string
+    reserve_date: string
+    license_plate: string
+    reserve_start_date: string
+    reserve_end_date: string
+  }
+  const parkingList = ref<ParkingItem[]>([])
 
   // 送出表單
-  async function searchHandler () {
+  async function searchHandler (): Promise<void> {
     const { valid } = await searchFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
