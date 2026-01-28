@@ -155,8 +155,8 @@
           <v-list>
             <!-- 帳號列表 -->
             <v-list-item
-              v-for="member in memberList"
-              :key="member.id"
+              v-for="(member, index) in memberList"
+              :key="index"
               class="pa-0 border"
             >
               <div class="d-flex justify-space-between w-100">
@@ -508,7 +508,7 @@
   import PromptDialog from '@/components/PromptDialog.vue'
   import { formatDate } from '@/utils/date.ts'
 
-  const BaseUrl = import.meta.env.VITE_API_BASE_URL
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Prompt Message Dialog
   const messageDialog = ref<boolean>(false)
@@ -539,36 +539,42 @@
     disableTime: string
   }
   interface Props {
-    activeTab: TabItem
-    userInfo: MemberInfo
+    activeTab?: TabItem
+    userInfo?: MemberInfo
   }
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    userInfo: {
-      type: Object,
-      default: () => ({}),
-    },
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
+    userInfo: () => ({} as MemberInfo),
   })
-  const emits = defineEmits(['on-close'])
-  const currentPage = ref('home')
-  const loading = ref(false)
+  const emits = defineEmits<{
+    'on-close': []
+  }>()
+  const currentPage = ref<string>('home')
+  const loading = ref<boolean>(false)
 
-  function changePwd () {
+  function changePwd (): void {
     currentPage.value = 'changePwd'
   }
 
   // 變更密碼
-  const cpFormRef = ref()
-  const cpForm = ref({
+  const cpFormRef = ref<any>()
+  interface CpForm {
+    orgPassword: string
+    password: string
+    password2: string
+  }
+  const cpForm = ref<CpForm>({
     orgPassword: '',
     password: '',
     password2: '',
   })
 
-  const rules = ref({
+  interface Rules {
+    orgPasswordRules: Array<(v: string) => boolean | string>
+    passwordRules: Array<(v: string) => boolean | string>
+    passwordRules2: Array<(v: string) => boolean | string>
+  }
+  const rules = ref<Rules>({
     orgPasswordRules: [
       v => !!v || '原密碼為必填',
     ],
@@ -583,7 +589,13 @@
   })
 
   // 變更密碼
-  async function onSendChangePwd () {
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+
+  }
+  async function onSendChangePwd (): Promise<void> {
     const { valid } = await cpFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
@@ -596,8 +608,8 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/update_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
+      const res = await api.post<ApiResponse>(apiUrl, payload)
+      const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`
@@ -619,19 +631,35 @@
     }
   }
 
-  function backHome () {
+  function backHome (): void {
     currentPage.value = 'home'
   }
 
-  async function setSubAccount () {
+  async function setSubAccount (): Promise<void> {
     currentPage.value = 'subAccount'
     await fetchMemberList()
   }
 
   // 子帳號設定
-  const memberList = ref([])
-  const saFormRef = ref()
-  const saForm = ref({
+  interface MemberList {
+    account: string
+    disableTime: string
+    enableTime: string
+    userId: number
+    deleteTime: string
+  }
+  const memberList = ref<MemberList[]>([])
+  const saFormRef = ref<any>()
+  interface SaForm {
+    acc_name: string
+    account: string
+    password: string
+    password2: string
+    enableTime: string
+    disableTime: string
+    userId?: number
+  }
+  const saForm = ref<SaForm>({
     acc_name: '',
     account: '',
     password: '',
@@ -639,10 +667,20 @@
     enableTime: '',
     disableTime: '',
   })
-  const isShowPassword = ref(false)
-  const isShowPassword2 = ref(false)
+  const isShowPassword = ref<boolean>(false)
+  const isShowPassword2 = ref<boolean>(false)
 
-  const saRules = ref({
+  interface SaRules {
+    accNameRules: Array<(v: string) => boolean | string>
+    accountRules: Array<(v: string) => boolean | string>
+    passwordRules: Array<(v: string) => boolean | string>
+    passwordRules2: Array<(v: string) => boolean | string>
+    editPasswordRules: Array<(v: string) => boolean | string>
+    editPasswordRules2: Array<(v: string) => boolean | string>
+    enableTimeRule: Array<(v: string) => boolean | string>
+    disableTimeRule: Array<(v: string) => boolean | string>
+  }
+  const saRules = ref<SaRules>({
     accNameRules: [
       v => !!v || '使用者姓名為必填',
     ],
@@ -689,7 +727,13 @@
   })
 
   // 修改 / 刪除子帳號按鈕
-  function edit (member) {
+  interface Member {
+    account: string
+    disableTime: string
+    enableTime: string
+    userId: number
+  }
+  function edit (member: Member) {
     currentPage.value = 'edit'
     const { account, disableTime, enableTime, userId } = member
     saForm.value = {
@@ -703,7 +747,7 @@
   }
 
   // 新增子帳號按鈕
-  function add () {
+  function add (): void {
     currentPage.value = 'add'
     saForm.value = {
       acc_name: '',
@@ -716,7 +760,7 @@
   }
 
   // 刪除子帳號
-  function delAccount () {
+  function delAccount (): void {
     const { account } = saForm.value
     messageTitle.value = '訊息通知'
     message.value = `子帳號 [ ${account} ] 刪除後將無法復原，確定要刪除嗎？`
@@ -724,7 +768,7 @@
     messageDialog.value = true
     messageType.value = 'deleteSubAccount'
   }
-  async function deleteSubAccount () {
+  async function deleteSubAccount (): Promise<void> {
     const { valid } = await saFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
@@ -737,7 +781,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/delete_Ch_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         messageTitle.value = '訊息通知'
@@ -759,7 +803,7 @@
   }
 
   // 取得子帳號列表
-  async function fetchMemberList () {
+  async function fetchMemberList (): Promise<void> {
     backSubAccount()
     const payload = {
       vendorId: props.userInfo.vendorId,
@@ -768,7 +812,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/select_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
         memberList.value = data
@@ -786,7 +830,7 @@
   }
 
   // 編輯 儲存子帳號
-  async function editSubAccount () {
+  async function editSubAccount (): Promise<void> {
     const { valid } = await saFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
@@ -803,7 +847,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/update_Ch_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         await fetchMemberList()
@@ -823,7 +867,7 @@
   }
 
   // 新增 儲存子帳號
-  async function saveSubAccount () {
+  async function saveSubAccount (): Promise<void> {
     const { valid } = await saFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
@@ -843,8 +887,8 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/create_user?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
+      const res = await api.post<ApiResponse>(apiUrl, payload)
+      const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         await fetchMemberList()
         saFormRef.value.reset()
@@ -868,7 +912,7 @@
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     if (messageType.value === 'deleteSubAccount') {
       deleteSubAccount()
       messageType.value = ''
@@ -877,17 +921,17 @@
     messageDialog.value = false
   }
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 
   // 回到子帳號列表
-  function backSubAccount () {
+  function backSubAccount (): void {
     currentPage.value = 'subAccount'
   }
 
   // 離開此頁面
-  function onClose () {
+  function onClose (): void {
     emits('on-close')
   }
 </script>

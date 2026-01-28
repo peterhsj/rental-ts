@@ -78,7 +78,7 @@
   import Logout from '@/components/Logout.vue'
   import PromptDialog from '@/components/PromptDialog.vue'
   import ParkingDeduction from '@/components/shop/ParkingDeduction.vue'
-  import SearchForm from '@/components/shop/SearchForm.vue'
+  import SearchForm from '@/components/shop/ShopSearchForm.vue'
   import TabList from '@/compo nents/TabList.vue'
   import { shopList } from '@/utils/site.ts'
 

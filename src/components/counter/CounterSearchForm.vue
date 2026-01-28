@@ -152,7 +152,7 @@
   const emits = defineEmits<{
     'close-form': []
   }>()
-  const BaseUrl = import.meta.env.VITE_API_BASE_URL
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Prompt Message Dialog
   const messageDialog = ref<boolean>(false)
@@ -197,6 +197,11 @@
   const parkingList = ref<ParkingItem[]>([])
 
   // 送出表單
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+  }
   async function searchHandler (): Promise<void> {
     const { valid } = await searchFormRef.value.validate()
     // 檢核欄位
@@ -216,7 +221,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/select_counter?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
         parkingList.value = data
@@ -234,16 +239,16 @@
   }
 
   // 關閉表單
-  function onCloseForm () {
+  function onCloseForm (): void {
     emits('close-form')
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
   }
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 </script>

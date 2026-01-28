@@ -151,7 +151,7 @@
   const emits = defineEmits<{
     'close-form': []
   }>()
-  const BaseUrl = import.meta.env.VITE_API_BASE_URL
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Prompt Message Dialog
   const messageDialog = ref<boolean>(false)
@@ -258,8 +258,13 @@
     }
   }
 
-  // 關閉表單
-  async function saveForm () {
+  // 車號登記
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+  }
+  async function saveForm (): Promise<void> {
     const payload = {
       userId: props.userID,
       reserve: parkingList.value,
@@ -273,7 +278,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/self_register_counter?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         emits('close-form')
@@ -294,12 +299,12 @@
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
     delParkingConfirm()
   }
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 </script>

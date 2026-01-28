@@ -52,12 +52,14 @@
   const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object as () => TabItem,
-      default: () => ({}),
-    },
+  interface Props {
+    activeTab?: TabItem
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
   })
 
-  const emits = defineEmits(['on-login'])
+  const emits = defineEmits<{
+    'on-login': []
+  }>()
 </script>

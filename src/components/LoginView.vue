@@ -21,28 +21,34 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="loginForm.account"
-                autocomplete="off"
+                autocomplete="new-account"
                 color="blue-darken-2"
                 density="compact"
+                name="account-field"
                 placeholder="請輸入帳號"
+                readonly
                 required
                 :rules="rules.accountRules"
                 variant="outlined"
+                @focus="$event.target.removeAttribute('readonly')"
               />
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="loginForm.password"
                 :append-inner-icon="isShowPassword ? 'fa:far fa-eye-slash' : 'fa:far fa-eye'"
-                autocomplete="off"
+                autocomplete="new-password"
                 color="blue-darken-2"
                 density="compact"
+                name="password-field"
                 placeholder="請輸入密碼"
+                readonly
                 required
                 :rules="rules.passwordRules"
                 :type="isShowPassword ? 'text' : 'password'"
                 variant="outlined"
                 @click:append-inner="isShowPassword = !isShowPassword"
+                @focus="$event.target.removeAttribute('readonly')"
               />
             </v-col>
             <v-col class="py-0" cols="12">

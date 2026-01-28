@@ -68,22 +68,10 @@
   import api from '@/api'
   import CommonOverlay from '@/components/CommonOverlay.vue'
   import InfoView from '@/components/InfoView.vue'
-  import SearchForm from '@/components/parking/SearchForm.vue'
+  import SearchForm from '@/components/parking/ParkingSearchForm.vue'
   import PromptDialog from '@/components/PromptDialog.vue'
   import TabList from '@/components/TabList.vue'
   import { parkingList } from '@/utils/site.ts'
-
-  interface ApiResponse<T = any> {
-    returnCode: number
-    message: string
-    data?: T
-  }
-
-  interface ParkingData {
-    license_plate: string
-    reserve_start_date: string
-    reserve_end_date: string
-  }
 
   const BaseUrl = import.meta.env.VITE_BASE_URL
   const loading = ref<boolean>(false)
@@ -192,6 +180,17 @@
   }
 
   // 查詢停車登記
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+  }
+
+  interface ParkingData {
+    license_plate: string
+    reserve_start_date: string
+    reserve_end_date: string
+  }
   async function sendSearchForm (): Promise<void> {
     const { phone, license_plate } = parkingForm.value
     const payload = {

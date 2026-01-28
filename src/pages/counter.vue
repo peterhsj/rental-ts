@@ -82,7 +82,7 @@
   import { useRouter } from 'vue-router'
   import ChangePassword from '@/components/ChangePassword.vue'
   import CheckinForm from '@/components/counter/CheckinForm.vue'
-  import SearchForm from '@/components/counter/SearchForm.vue'
+  import SearchForm from '@/components/counter/CounterSearchForm.vue'
   import SelfCheckinForm from '@/components/counter/SelfCheckinForm.vue'
   import Logout from '@/components/Logout.vue'
   import PromptDialog from '@/components/PromptDialog.vue'
@@ -120,7 +120,7 @@
     disableTime: string
   }
 
-  const BaseUrl = import.meta.env.VITE_API_BASE_URL
+  const BaseUrl = import.meta.env.VITE_BASE_URL
   const router = useRouter()
   const memberInfo = ref<MemberInfo | null>(null)
 
@@ -182,8 +182,8 @@
   function init (): void {
     const memberStorage = localStorage.getItem('memberInfo')
     if (memberStorage) {
-      const { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime} = JSON.parse(memberStorage)
-      memberInfo.value = { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime}
+      const { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime } = JSON.parse(memberStorage)
+      memberInfo.value = { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime }
     } else {
       router.push('/counterLogin')
     }
