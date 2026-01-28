@@ -5,8 +5,8 @@
         <v-icon class="mr-2" color="grey-darken-1" icon="fa:fas fa-chevron-left" size="20" />
         <v-avatar :image="`${BaseUrl}/images/profile.svg`" size="30" />
         <span class="ml-3 text-subtitle-1 font-weight-bold text-grey-darken-3">
-          {{ props.memberInfo.vendor_name }}
-          [ {{ props.memberInfo.acc_name }} ]
+          {{ props.memberInfo?.vendor_name }}
+          [ {{ props.memberInfo?.acc_name }} ]
         </span>
       </div>
       <v-container class="pb-2 d-flex flex-column justify-space-between" style="height: calc(100% - 64px);">
@@ -159,42 +159,64 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
   import api from '@/api'
   import PromptDialog from '@/components/PromptDialog.vue'
-  import { formatDate } from '@/utils/date'
+  import { formatDate } from '@/utils/date.ts'
+
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data: T
+  }
 
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    memberInfo: {
-      type: Object,
-      default: () => ({}),
-    },
+  interface Props {
+    activeTab?: TabItem
+    memberInfo?: {
+      userId?: number
+      identity?: string
+      acc_name: string
+      account?: string
+      vendorId: number
+      vendor_name: string
+    }
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
   })
-  const emits = defineEmits(['close-form'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  const emits = defineEmits<{
+    'close-form': []
+  }>()
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
-  const loading = ref(false)
+  const loading = ref<boolean>(false)
 
   // searchForm
-  const searchFormRef = ref()
-  const searchForm = ref({
+  const searchFormRef = ref<any>()
+  interface SearchForm {
+    start_time: string
+    end_time: string
+  }
+  const searchForm = ref<SearchForm>({
     start_time: '',
     end_time: '',
   })
-  const rules = ref({
+
+  interface Rules {
+    startDateRule: Array<(v: any) => boolean | string>
+    endDateRule: Array<(v: any) => boolean | string>
+  }
+  const rules = ref<Rules>({
     startDateRule: [
       v => !!v || '請選擇起始日期',
       v => {
@@ -218,16 +240,25 @@
       },
     ],
   })
-  const carList = ref([])
+
+  interface CarRecord {
+    id: number
+    plate: string
+    amount: number
+    discount_time: string
+    name: string
+    account: string
+  }
+  const carList = ref<CarRecord[]>([])
 
   // 商店折抵查詢
-  async function onSearch () {
+  async function onSearch (): Promise<void> {
     const { valid } = await searchFormRef.value.validate()
     // 檢核欄位
     if (!valid) return
     const { start_time, end_time } = searchForm.value
     const payload = {
-      vendorId: props.memberInfo.vendorId,
+      vendorId: props.memberInfo?.vendorId,
       start_time: formatDate(start_time),
       end_time: formatDate(end_time),
     }
@@ -236,7 +267,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/select_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
         if (data.length === 0) {
@@ -281,16 +312,16 @@
   }
 
   // 關閉表單
-  function onCloseForm () {
+  function onCloseForm (): void {
     emits('close-form')
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
   }
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 </script>

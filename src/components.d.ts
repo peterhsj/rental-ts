@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    BanquetSearchForm: typeof import('./components/banquet/BanquetSearchForm.vue')['default']
     Captcha: typeof import('./components/Captcha.vue')['default']
     ChangePassword: typeof import('./components/ChangePassword.vue')['default']
     CheckinForm: typeof import('./components/counter/CheckinForm.vue')['default']

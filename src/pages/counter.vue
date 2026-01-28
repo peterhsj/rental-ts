@@ -45,7 +45,7 @@
     </v-container>
     <!-- 登記查詢 -->
     <v-container v-if="activeTab?.value === 'search'" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
-      <SearchForm
+      <CounterSearchForm
         :active-tab="activeTab"
         @close-form="closeCheckinForm"
       />
@@ -80,13 +80,6 @@
   import type { TabItem } from '@/utils/site.ts'
   import { onMounted, onUnmounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import ChangePassword from '@/components/ChangePassword.vue'
-  import CheckinForm from '@/components/counter/CheckinForm.vue'
-  import SearchForm from '@/components/counter/CounterSearchForm.vue'
-  import SelfCheckinForm from '@/components/counter/SelfCheckinForm.vue'
-  import Logout from '@/components/Logout.vue'
-  import PromptDialog from '@/components/PromptDialog.vue'
-  import TabList from '@/components/TabList.vue'
   import { counterList } from '@/utils/site.ts'
 
   interface MemberInfo {
@@ -182,8 +175,7 @@
   function init (): void {
     const memberStorage = localStorage.getItem('memberInfo')
     if (memberStorage) {
-      const { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime } = JSON.parse(memberStorage)
-      memberInfo.value = { userId, identity, acc_name, account, vendorId, parkId, unitId, forTest, vendor_name, store_type, remainPoints, slipStyle, slipHour, createTime, deleteTime, note, enableTime, disableTime }
+      memberInfo.value = JSON.parse(memberStorage)
     } else {
       router.push('/counterLogin')
     }

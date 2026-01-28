@@ -23,7 +23,7 @@
     </v-container>
     <!-- 登記 -->
     <v-container v-if="isEdit && activeTab?.value === 'parking'" id="parking" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
-      <SearchForm
+      <ParkingSearchForm
         ref="searchFormRef"
         v-model:form-data="parkingForm"
         :active-tab="activeTab"
@@ -33,7 +33,7 @@
     </v-container>
     <!-- 查詢 -->
     <v-container v-if="isEdit && activeTab?.value === 'search'" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
-      <SearchForm
+      <ParkingSearchForm
         ref="searchFormRef"
         v-model:form-data="parkingForm"
         :active-tab="activeTab"
@@ -66,27 +66,18 @@
   import type { TabItem } from '@/utils/site.ts'
   import { onMounted, onUnmounted, ref } from 'vue'
   import api from '@/api'
-  import CommonOverlay from '@/components/CommonOverlay.vue'
-  import InfoView from '@/components/InfoView.vue'
-  import SearchForm from '@/components/parking/ParkingSearchForm.vue'
-  import PromptDialog from '@/components/PromptDialog.vue'
-  import TabList from '@/components/TabList.vue'
   import { parkingList } from '@/utils/site.ts'
+
+  interface ParkingSearchFormInstance {
+    initForm: () => void
+  }
 
   const BaseUrl = import.meta.env.VITE_BASE_URL
   const loading = ref<boolean>(false)
   const activeTab = ref<TabItem | null>(null)
   const isEdit = ref<boolean>(false)
   const isMobile = ref<boolean>(false)
-  /**
-   * 搜尋表單的模板引用
-   *
-   * 用於獲取搜尋表單組件的實例，可以通過此引用訪問表單的方法和屬性，
-   * 例如表單驗證、重置表單等操作。
-   *
-   * @type {Ref<ComponentPublicInstance | undefined>}
-   */
-  const searchFormRef = ref<InstanceType<typeof SearchForm>>()
+  const searchFormRef = ref<ParkingSearchFormInstance>()
 
   // parking
   interface ParkingForm {

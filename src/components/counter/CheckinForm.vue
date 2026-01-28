@@ -268,6 +268,11 @@
   }
 
   // 關閉表單
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+  }
   async function saveForm (): Promise<void> {
     const payload = {
       userId: props.userID,
@@ -282,7 +287,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/register_counter?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         emits('close-form')

@@ -5,18 +5,18 @@
         <v-icon class="mr-2" color="grey-darken-1" icon="fa:fas fa-chevron-left" size="20" />
         <v-avatar :image="`${BaseUrl}/images/profile.svg`" size="30" />
         <span class="ml-3 text-subtitle-1 font-weight-bold text-grey-darken-3">
-          {{ props.memberInfo.vendor_name }}
-          [ {{ props.memberInfo.acc_name }} ]
+          {{ props.memberInfo?.vendor_name }}
+          [ {{ props.memberInfo?.acc_name }} ]
         </span>
       </div>
       <v-container class="pb-2 d-flex flex-column" style="height: calc(100% - 64px);">
         <div class="flex-grow-1 overflow-hidden overflow-y-auto">
           <div class="d-flex justify-center my-8">
             <v-avatar color="blue-darken-3" size="170">
-              <span v-if="storeInfo.remainPoints === '-1'">
+              <span v-if="storeInfo?.remainPoints === -1">
                 <v-icon class="" icon="fa:fas fa-infinity" size="80" />
               </span>
-              <span v-else class="text-h3">{{ storeInfo.remainPoints }}</span>
+              <span v-else class="text-h3">{{ storeInfo?.remainPoints }}</span>
             </v-avatar>
           </div>
           <v-form ref="formRef">
@@ -77,26 +77,26 @@
               </span>
             </p>
             <p class="my-4 text-h6">
-              {{ storeInfo.slipStyle === 20 ? '當次折抵' : '折抵時數' }}
+              {{ storeInfo?.slipStyle === 20 ? '當次折抵' : '折抵時數' }}
             </p>
             <div class="ma-4 d-flex align-center justify-space-around w-100">
-              <template v-if="storeInfo.slipStyle === 18 || storeInfo.slipStyle === 19">
+              <template v-if="storeInfo?.slipStyle === 18 || storeInfo?.slipStyle === 19">
                 <v-btn
-                  v-for="(hour, index) in slipHours"
+                  v-for="(hourItem, index) in slipHours"
                   :key="index"
                   class="my-2 mx-1 px-4 text-none rounded-pill"
-                  :color="selectedHour === hour ? 'blue-lighten-1' : 'blue-darken-3'"
-                  :disabled="!canDeduction || storeInfo.remainPoints < 1"
+                  :color="selectedHour === hourItem ? 'blue-lighten-1' : 'blue-darken-3'"
+                  :disabled="!canDeduction || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints < 1)"
                   height="40"
                   type="button"
                   variant="flat"
-                  @click="selectedHours(hour)"
+                  @click="selectedHours(hourItem)"
                 >
-                  {{ hour }} hr
+                  {{ hourItem }} hr
                 </v-btn>
               </template>
               <v-btn
-                v-if="storeInfo.slipStyle === 19 || storeInfo.slipStyle === 20"
+                v-if="storeInfo?.slipStyle === 19 || storeInfo?.slipStyle === 20"
                 class="my-2 mx-1 px-4 text-none rounded-pill"
                 :color="selectedHour === 24 ? 'blue-lighten-1' : 'blue-darken-3'"
                 :disabled="!canDeduction"
@@ -111,7 +111,7 @@
 
             <div class="mt-3 d-flex flex-wrap justify-center w-100">
               <v-btn
-                v-if="canDeduction || storeInfo.remainPoints > 0"
+                v-if="canDeduction || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints > 0)"
                 class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
                 color="red-darken-1"
                 height="40"
@@ -165,42 +165,88 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { onMounted, ref } from 'vue'
   import api from '@/api'
   import PromptDialog from '@/components/PromptDialog.vue'
 
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+    discount?: T
+  }
+
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    memberInfo: {
-      type: Object,
-      default: () => ({}),
-    },
+  interface Props {
+    activeTab?: TabItem
+    memberInfo?: {
+      userId?: number
+      identity?: string
+      acc_name: string
+      account?: string
+      vendorId: number
+      parkId?: number
+      unitId?: number
+      forTest?: string
+      vendor_name: string
+      store_type: number
+      remainPoints?: number
+      slipStyle: number
+      slipHour: string
+      createTime?: string
+      deleteTime?: string
+      note?: string
+      enableTime?: string
+      disableTime?: string
+    }
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
   })
-  const emits = defineEmits(['close-form'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  const emits = defineEmits<{
+    'close-form': []
+  }>()
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
-  const loading = ref(false)
-  const canDeduction = ref(false)
+  const loading = ref<boolean>(false)
+  const canDeduction = ref<boolean>(false)
 
   // carNumber 查詢
-  const formRef = ref()
-  const form = ref({
+  const formRef = ref<any>()
+  interface Form {
+    license_plate: string
+  }
+  const form = ref<Form>({
     license_plate: '',
   })
-  const carInfo = ref({})
-  const discountList = ref([])
-  const rules = ref({
+
+  interface CarInfo {
+    license_plate?: string
+    arrival_time?: string
+    paymentAmount?: number
+    ischeck?: number
+  }
+  const carInfo = ref<CarInfo | null>(null)
+
+  interface DiscountItem {
+    vendor_name: string
+    amount: number
+    store_type: number
+  }
+  const discountList = ref<DiscountItem[]>([])
+
+  interface Rules {
+    carRules: Array<(v: string) => boolean | string>
+  }
+  const rules = ref<Rules>({
     carRules: [
       v => !!v || '車號為必填',
     // v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )'
@@ -208,12 +254,21 @@
   })
 
   // 折抵商店資訊
-  const storeInfo = ref({})
-  const slipHours = ref([])
-  const selectedHour = ref(null)
+  interface StoreInfo {
+    vendorId?: string
+    store_type?: number
+    remainPoints?: number
+    slipStyle?: number
+    slipHour?: string
+  }
+  const storeInfo = ref<StoreInfo | null>(null)
+  const slipHours = ref<number[]>([])
+  const selectedHour = ref<number | null>(null)
 
   // 取得折抵剩餘時數
-  async function getStore () {
+  async function getStore (): Promise<void> {
+    if (!props.memberInfo?.vendorId) return
+
     const payload = {
       id: props.memberInfo.vendorId,
     }
@@ -221,7 +276,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/get_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
         storeInfo.value = data[0]
@@ -244,7 +299,7 @@
   })
 
   // 入場資訊查詢
-  async function searchCarNumber () {
+  async function searchCarNumber (): Promise<void> {
     const { valid } = await formRef.value.validate()
     // 檢核欄位
     if (!valid) return
@@ -258,7 +313,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data, discount } = res
       if (returnCode === 0) {
         carInfo.value = data
@@ -303,13 +358,13 @@
   }
 
   // 選擇折抵時數
-  function selectedHours (hour) {
+  function selectedHours (hour: number): void {
     // console.log('選擇折抵時數', hour)
     selectedHour.value = hour
   }
 
   // 商店折抵登記
-  async function onDeduction () {
+  async function onDeduction (): Promise<void> {
     // 檢核欄位
     if (!selectedHour.value) {
       messageTitle.value = '訊息通知'
@@ -320,8 +375,8 @@
     }
 
     const payload = {
-      vendorId: storeInfo.value.vendorId,
-      store_type: storeInfo.value.store_type,
+      vendorId: storeInfo.value?.vendorId,
+      store_type: storeInfo.value?.store_type,
       license_plate: form.value.license_plate,
       count: selectedHour.value,
     }
@@ -329,7 +384,7 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/register_store?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         // 初始化資料
@@ -358,17 +413,17 @@
   }
 
   // 關閉表單
-  function onCloseForm () {
+  function onCloseForm (): void {
     emits('close-form')
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
-    delParkingConfirm()
   }
+
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 </script>

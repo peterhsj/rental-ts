@@ -30,7 +30,7 @@
       />
     </v-container>
     <!-- 停車折抵 -->
-    <v-container v-if="activeTab.value === 'parkingDeduction'" id="parkingDeduction" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'parkingDeduction' && memberInfo" id="parkingDeduction" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <ParkingDeduction
         :active-tab="activeTab"
         :member-info="memberInfo"
@@ -38,22 +38,22 @@
       />
     </v-container>
     <!-- 查詢 -->
-    <v-container v-if="activeTab.value === 'search'" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
-      <SearchForm
+    <v-container v-if="activeTab?.value === 'search'" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+      <ShopSearchForm
         :active-tab="activeTab"
         :member-info="memberInfo"
         @close-form="closeParkingDeduction"
       />
     </v-container>
     <!-- 登出 -->
-    <v-container v-if="activeTab.value === 'logout'" id="logout" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'logout'" id="logout" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <Logout
         :active-tab="activeTab"
         @on-login="login"
       />
     </v-container>
     <!-- 修改密碼及子帳號 -->
-    <v-container v-if="activeTab.value === 'changePassword'" id="changePassword" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'changePassword' && memberInfo" id="changePassword" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <ChangePassword
         :active-tab="activeTab"
         :user-info="memberInfo"
@@ -71,33 +71,58 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { onMounted, onUnmounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import ChangePassword from '@/components/ChangePassword.vue'
-  import Logout from '@/components/Logout.vue'
-  import PromptDialog from '@/components/PromptDialog.vue'
-  import ParkingDeduction from '@/components/shop/ParkingDeduction.vue'
-  import SearchForm from '@/components/shop/ShopSearchForm.vue'
-  import TabList from '@/compo nents/TabList.vue'
   import { shopList } from '@/utils/site.ts'
 
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
-  const router = useRouter()
-  const memberInfo = ref(null)
+  interface MemberInfo {
+    userId: number
+    identity: string
+    acc_name: string
+    account: string
+    // userphone: string
+    // useraddress: string
+    vendorId: number
+    parkId: number
+    unitId: number
+    forTest: string
+    vendor_name: string
+    // name: string
+    // phone: string
+    // address: string
+    // tax: string
+    // mail: string
+    // vendorTitle: string
+    store_type: number
+    remainPoints: number
+    slipStyle: number
+    // openDateFree: number
+    // slipCode: string
+    slipHour: string
+    createTime: string
+    deleteTime: string
+    note: string
+    enableTime: string
+    disableTime: string
+  }
 
-  const activeTab = ref({})
-  const isEdit = ref(false)
-  const isMobile = ref(false)
+  const BaseUrl = import.meta.env.VITE_BASE_URL
+  const router = useRouter()
+  const memberInfo = ref<MemberInfo | null>(null)
+  const activeTab = ref<TabItem | null>(null)
+  const isEdit = ref<boolean>(false)
+  const isMobile = ref<boolean>(false)
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
   // 商店消費停車折抵選單切換
-  function setActiveTab (tab) {
+  function setActiveTab (tab: TabItem): void {
     activeTab.value = tab
     isEdit.value = true
 
@@ -109,55 +134,55 @@
   }
 
   // 回到停車折抵主畫面
-  function closeParkingDeduction () {
-    activeTab.value = {}
+  function closeParkingDeduction (): void {
+    activeTab.value = null
     isEdit.value = false
   }
 
   // 登入
-  function login () {
-    activeTab.value = {}
+  function login (): void {
+    activeTab.value = null
     isEdit.value = false
-    router.push('/ShopLogin')
+    router.push('/shopLogin')
   }
 
   // 離開
-  function onClose () {
-    activeTab.value = {}
+  function onClose (): void {
+    activeTab.value = null
     isEdit.value = false
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
   }
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 
   // 偵測手持裝置
-  function checkIsMobile () {
+  function checkIsMobile (): void {
     isMobile.value = window.innerWidth <= 960
   }
 
   // 檢查 localStorage 並 取得 memberInfo 值
-  function init () {
+  function init (): void {
     const memberStorage = localStorage.getItem('memberInfo')
     if (memberStorage) {
-      memberInfo.value = JSON.parse(localStorage.getItem('memberInfo'))
+      memberInfo.value = JSON.parse(memberStorage)
     } else {
-      router.push('/ShopLogin')
+      router.push('/shopLogin')
     }
   }
 
-  onMounted(() => {
+  onMounted((): void => {
     init()
     checkIsMobile()
     window.addEventListener('resize', checkIsMobile)
   })
 
-  onUnmounted(() => {
+  onUnmounted((): void => {
     window.removeEventListener('resize', checkIsMobile)
   })
 </script>
