@@ -24,6 +24,7 @@ declare module 'vue-router/auto-routes' {
     '/banquetLogin': RouteRecordInfo<'/banquetLogin', '/banquetLogin', Record<never, never>, Record<never, never>>,
     '/counter': RouteRecordInfo<'/counter', '/counter', Record<never, never>, Record<never, never>>,
     '/counterLogin': RouteRecordInfo<'/counterLogin', '/counterLogin', Record<never, never>, Record<never, never>>,
+    '/customer': RouteRecordInfo<'/customer', '/customer', Record<never, never>, Record<never, never>>,
     '/parking': RouteRecordInfo<'/parking', '/parking', Record<never, never>, Record<never, never>>,
     '/shop': RouteRecordInfo<'/shop', '/shop', Record<never, never>, Record<never, never>>,
     '/shopLogin': RouteRecordInfo<'/shopLogin', '/shopLogin', Record<never, never>, Record<never, never>>,
@@ -62,6 +63,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/counterLogin.vue': {
       routes: '/counterLogin'
+      views: never
+    }
+    'src/pages/customer.vue': {
+      routes: '/customer'
       views: never
     }
     'src/pages/parking.vue': {
