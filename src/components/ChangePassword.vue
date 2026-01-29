@@ -69,28 +69,35 @@
             <v-col cols="12" md="4">
               <v-text-field
                 v-model="cpForm.orgPassword"
-                autocomplete="off"
+                :append-inner-icon="isShowOriPassword ? 'fa:far fa-eye-slash' : 'fa:far fa-eye'"
+                autocomplete="current-password"
                 color="blue-darken-2"
                 density="compact"
                 placeholder="請輸入原密碼"
+                readonly
                 required
                 :rules="rules.orgPasswordRules"
+                :type="isShowOriPassword ? 'text' : 'password'"
                 variant="outlined"
+                @click:append-inner="isShowOriPassword = !isShowOriPassword"
+                @focus="$event.target.removeAttribute('readonly')"
               />
             </v-col>
             <v-col cols="12" md="4">
               <v-text-field
                 v-model="cpForm.password"
                 :append-inner-icon="isShowPassword ? 'fa:far fa-eye-slash' : 'fa:far fa-eye'"
-                autocomplete="off"
+                autocomplete="new-password"
                 color="blue-darken-2"
                 density="compact"
                 placeholder="請輸入新密碼"
+                readonly
                 required
                 :rules="rules.passwordRules"
                 :type="isShowPassword ? 'text' : 'password'"
                 variant="outlined"
                 @click:append-inner="isShowPassword = !isShowPassword"
+                @focus="$event.target.removeAttribute('readonly')"
               />
             </v-col>
             <v-col cols="12" md="4">
@@ -667,6 +674,7 @@
     enableTime: '',
     disableTime: '',
   })
+  const isShowOriPassword = ref<boolean>(false)
   const isShowPassword = ref<boolean>(false)
   const isShowPassword2 = ref<boolean>(false)
 

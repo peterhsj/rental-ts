@@ -1,0 +1,116 @@
+$fh-color: #212c4f;
+$table-color: #4e884e;
+
+:root {
+  /* 中文優先：Noto Sans TC 含良好拉丁字形，可維持整體一致 */
+  --font-cjk:
+    'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', 'Hiragino Sans TC', Arial,
+    sans-serif;
+
+  /* 補充：Emoji */
+  --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+}
+
+/*vuetify media query breakpoints
+  xs: 0
+  sm: 600px
+  md: 960px
+  lg: 1280px
+  xl: 1920px
+  xxl: 2560px
+*/
+$breakpoint-sm: 600px;
+$breakpoint-md: 960px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1920px;
+$breakpoint-xxl: 2560px;
+
+@mixin breakpoint($breakpoint) {
+  @if $breakpoint ==sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint ==md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint ==lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint ==xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  } @else if $breakpoint ==xxl {
+    @media (min-width: $breakpoint-xxl) {
+      @content;
+    }
+  } @else {
+    @warn "Breakpoint #{$breakpoint} is not recognized.";
+  }
+}
+
+html,
+body,
+#app {
+  font-family: var(--font-cjk), var(--font-emoji);
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  font-synthesis: none;
+  background-color: #F5F5F5;
+  /* 避免瀏覽器自行合成粗/斜體 */
+}
+
+#app {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.rental {
+  &__wrapper {
+    max-width: 1200px !important;
+  }
+
+  &__header {
+    cursor: pointer;
+    height: 64px;
+  }
+
+  &__text {
+    &--h4 {
+      font-size: 1.4rem !important;
+    }
+
+    &--h45 {
+      font-size: 1.7rem !important;
+    }
+  }
+
+  &__bg {
+    --bg-color: #f5f5f5;
+    &--brown {
+      background-color: #bf9000 !important;
+      color: #FFFFFF !important;
+    }
+    &--light-blue {
+      background-color: #dae3f3 !important;
+      // color: #212c4f !important;
+    }
+    &--light-orange {
+      background-color: #fbe5d6 !important;
+    }
+    &--light-green {
+      background-color: #e2f0d9 !important;
+    }
+  }
+}
+
+.v-field {
+  &__append-inner {
+    i::before {
+      vertical-align: baseline !important;
+    }
+  }
+}
