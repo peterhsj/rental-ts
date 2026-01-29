@@ -135,8 +135,8 @@
   import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
   import { formatDate } from '@/utils/date.ts'
 
   // Props
@@ -174,7 +174,7 @@
     note: '',
   })
   const delItem = ref<CheckinForm | null>(null)
-  const checkinFormRef = ref<any>()
+  const checkinFormRef = ref<InstanceType<typeof VForm> | null>(null)
 
   interface Rules {
     phoneRules: Array<(v: string) => string | boolean>
@@ -212,7 +212,7 @@
 
   // 新增停車紀錄
   async function addParking (): Promise<void> {
-    const { valid } = await checkinFormRef.value.validate()
+    const { valid } = await checkinFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
     const { phone, reserve_start_date, reserve_end_date, note } = checkinForm.value
@@ -235,7 +235,7 @@
       }
     }
     parkingList.value.push(payload)
-    checkinFormRef.value.reset()
+    checkinFormRef.value?.reset()
   }
 
   // 刪除登記車號
@@ -258,7 +258,7 @@
     }
   }
 
-  // 車號登記
+  // 儲存登記車號
   interface ApiResponse<T = any> {
     returnCode: number
     message: string

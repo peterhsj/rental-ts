@@ -163,8 +163,8 @@
   import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
   import { formatDate } from '@/utils/date.ts'
 
   interface ApiResponse<T = any> {
@@ -202,7 +202,7 @@
   const loading = ref<boolean>(false)
 
   // searchForm
-  const searchFormRef = ref<any>()
+  const searchFormRef = ref<InstanceType<typeof VForm> | null>(null)
   interface SearchForm {
     start_time: string
     end_time: string
@@ -253,7 +253,7 @@
 
   // 商店折抵查詢
   async function onSearch (): Promise<void> {
-    const { valid } = await searchFormRef.value.validate()
+    const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
     const { start_time, end_time } = searchForm.value

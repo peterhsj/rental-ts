@@ -504,8 +504,8 @@
   import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api/index.ts'
-  import PromptDialog from '@/components/PromptDialog.vue'
   import { formatDate } from '@/utils/date.ts'
 
   const BaseUrl = import.meta.env.VITE_BASE_URL
@@ -557,7 +557,7 @@
   }
 
   // 變更密碼
-  const cpFormRef = ref<any>()
+  const cpFormRef = ref<InstanceType<typeof VForm> | null>(null)
   interface CpForm {
     orgPassword: string
     password: string
@@ -596,7 +596,7 @@
 
   }
   async function onSendChangePwd (): Promise<void> {
-    const { valid } = await cpFormRef.value.validate()
+    const { valid } = await cpFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
 
@@ -649,7 +649,7 @@
     deleteTime: string
   }
   const memberList = ref<MemberList[]>([])
-  const saFormRef = ref<any>()
+  const saFormRef = ref<InstanceType<typeof VForm> | null>(null)
   interface SaForm {
     acc_name: string
     account: string
@@ -769,7 +769,7 @@
     messageType.value = 'deleteSubAccount'
   }
   async function deleteSubAccount (): Promise<void> {
-    const { valid } = await saFormRef.value.validate()
+    const { valid } = await saFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
 
@@ -831,7 +831,7 @@
 
   // 編輯 儲存子帳號
   async function editSubAccount (): Promise<void> {
-    const { valid } = await saFormRef.value.validate()
+    const { valid } = await saFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
 
@@ -851,7 +851,7 @@
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         await fetchMemberList()
-        saFormRef.value.reset()
+        saFormRef.value?.reset()
         backSubAccount()
       } else {
         messageTitle.value = '訊息通知'
@@ -868,7 +868,7 @@
 
   // 新增 儲存子帳號
   async function saveSubAccount (): Promise<void> {
-    const { valid } = await saFormRef.value.validate()
+    const { valid } = await saFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
 
@@ -891,7 +891,7 @@
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
         await fetchMemberList()
-        saFormRef.value.reset()
+        saFormRef.value?.reset()
         backSubAccount()
       } else if (returnCode === 999) {
         messageTitle.value = '訊息通知'

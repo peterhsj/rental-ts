@@ -137,22 +137,22 @@
   import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api/index.ts'
-  import PromptDialog from '@/components/PromptDialog.vue'
   import { formatDate } from '@/utils/date.ts'
 
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object as () => TabItem,
-      default: () => ({}),
-    },
-    userID: {
-      type: Number,
-      default: 0,
-    },
+  interface Props {
+    activeTab?: TabItem
+    userID?: number
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: () => ({} as TabItem),
+    userID: 0,
   })
-  const emits = defineEmits(['close-form'])
+  const emits = defineEmits<{
+    'close-form': []
+  }>()
   const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Prompt Message Dialog
@@ -176,7 +176,7 @@
     reserve_end_date: '',
     note: '',
   })
-  const checkinFormRef = ref()
+  const checkinFormRef = ref<InstanceType<typeof VForm> | null>(null)
   const delItem = ref<CheckinForm | null>(null)
   interface Rules {
     carRules: Array<(v: any) => boolean | string>
@@ -220,7 +220,7 @@
 
   // 送出表單
   async function addParking (): Promise<void> {
-    const { valid } = await checkinFormRef.value.validate()
+    const { valid } = await checkinFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
     const { license_plate, reserve_start_date, reserve_end_date, note } = checkinForm.value
@@ -244,7 +244,7 @@
       }
     }
     parkingList.value.push(payload)
-    checkinFormRef.value.reset()
+    checkinFormRef.value?.reset()
   }
 
   // 刪除登記車號
@@ -267,7 +267,7 @@
     }
   }
 
-  // 關閉表單
+  // 儲存登記表單
   interface ApiResponse<T = any> {
     returnCode: number
     message: string

@@ -97,7 +97,7 @@
 <script lang="ts" setup>
   import type { TabItem } from '@/utils/site.ts'
   import { reactive, ref, watch } from 'vue'
-  import Captcha from '@/components/Captcha.vue'
+  import { VForm } from 'vuetify/components'
   // Props
   interface Props {
     activeTab?: TabItem
@@ -125,7 +125,7 @@
   }>()
   const BaseUrl = import.meta.env.VITE_BASE_URL
 
-  const parkingFormRef = ref()
+  const parkingFormRef = ref<InstanceType<typeof VForm> | null>(null)
   const parkingForm = reactive(props.formData)
   type Rules = {
     phoneRules: Array<(v: string) => boolean | string>
@@ -171,7 +171,7 @@
 
   // 送出表單
   async function onSendForm () {
-    const { valid } = await parkingFormRef.value.validate()
+    const { valid } = await parkingFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
     emits('send-form')
@@ -184,7 +184,7 @@
 
   // 重置表單
   function initForm () {
-    parkingFormRef.value.reset()
+    parkingFormRef.value?.reset()
   }
 
   defineExpose({

@@ -113,10 +113,8 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { VForm } from 'vuetify/components'
   import api from '@/api'
-  import Captcha from '@/components/Captcha.vue'
-  import CommonOverlay from '@/components/CommonOverlay.vue'
-  import PromptDialog from '@/components/PromptDialog.vue'
   interface LoginForm {
     account: string
     password: string
@@ -167,7 +165,7 @@
     },
   }
   const loading = ref<boolean>(false)
-  const loginFormRef = ref<any>()
+  const loginFormRef = ref<InstanceType<typeof VForm> | null>(null)
   const loginForm = ref<LoginForm>({
     account: '',
     password: '',
@@ -203,8 +201,13 @@
   }
 
   // 送出表單
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+  }
   async function onSendForm (): Promise<void> {
-    const { valid } = await loginFormRef.value.validate()
+    const { valid } = await loginFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
 
@@ -229,10 +232,8 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/login?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
-      // console.log('data', returnCode, returnMsg, data)
-
       if (returnCode === 0) {
         // 登入成功
         // 儲存 data 到 cookie

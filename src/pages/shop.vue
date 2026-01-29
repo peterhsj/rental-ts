@@ -38,7 +38,7 @@
       />
     </v-container>
     <!-- 查詢 -->
-    <v-container v-if="activeTab?.value === 'search'" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'search' && memberInfo" id="search" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <ShopSearchForm
         :active-tab="activeTab"
         :member-info="memberInfo"

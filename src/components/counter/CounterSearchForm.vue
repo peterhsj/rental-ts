@@ -139,8 +139,8 @@
 <script setup lang="ts">
   import type { TabItem } from '@/utils/site.ts'
   import { ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
 
   // Props
   interface Props {
@@ -170,7 +170,7 @@
     phone: '',
     license_plate: '',
   })
-  const searchFormRef = ref<any>()
+  const searchFormRef = ref<InstanceType<typeof VForm> | null>(null)
   interface Rules {
     phoneRules: Array<(v: string) => boolean | string>
     carRules: Array<(v: string) => boolean | string>
@@ -196,14 +196,14 @@
   }
   const parkingList = ref<ParkingItem[]>([])
 
-  // 送出表單
+  // 查詢表單
   interface ApiResponse<T = any> {
     returnCode: number
     message: string
     data?: T
   }
   async function searchHandler (): Promise<void> {
-    const { valid } = await searchFormRef.value.validate()
+    const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
     const { phone, license_plate } = searchForm.value
@@ -225,6 +225,7 @@
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
         parkingList.value = data
+        searchFormRef.value?.reset()
       } else {
         messageDialog.value = true
         messageTitle.value = '訊息'

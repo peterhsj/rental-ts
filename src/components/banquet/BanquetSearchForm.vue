@@ -9,11 +9,11 @@
         </span>
       </div>
       <v-container class="pb-2 d-flex flex-column" style="height: calc(100% - 64px);">
-        <v-form ref="formRef">
+        <v-form ref="searchFormRef">
           <v-row dense>
             <v-col cols="12">
               <v-text-field
-                v-model="form.license_plate"
+                v-model="searchForm.license_plate"
                 autocomplete="off"
                 bg-color="white"
                 class="pr-0"
@@ -23,7 +23,7 @@
                 required
                 :rules="rules.carRules"
                 variant="outlined"
-                @input="form.license_plate = form.license_plate.toUpperCase()"
+                @input="searchForm.license_plate = searchForm.license_plate.toUpperCase()"
               >
                 <template #append-inner>
                   <v-btn
@@ -153,48 +153,69 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
 
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
+  interface Props {
+    activeTab?: TabItem
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: Object as () => TabItem,
   })
-  const emits = defineEmits(['close-form'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  const emits = defineEmits<{
+    'close-form': []
+  }>()
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
   // carNumber 查詢
-  const formRef = ref()
-  const form = ref({
-    carNumber: '',
+  const searchFormRef = ref<InstanceType<typeof VForm> | null>(null)
+  interface SearchForm {
+    license_plate: string
+  }
+  const searchForm = ref<SearchForm>({
+    license_plate: '',
   })
-  const rules = ref({
+
+  interface Rules {
+    carRules: Array<(v: string) => string | boolean>
+  }
+  const rules = ref<Rules>({
     carRules: [
       v => !!v || '車號為必填',
       v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
     ],
   })
-  const loading = ref(false)
-  const parkingList = ref([])
+  const loading = ref<boolean>(false)
 
-  // 送出表單
-  async function searchCarNumber () {
-    console.log('送出表單', form.value.carNumber)
-    const { valid } = await formRef.value.validate()
+  interface ParkingInfo {
+    id: string
+    carNumber: string
+    startDate: string
+    endDate: string
+  }
+  const parkingList = ref<ParkingInfo[]>([])
+
+  // 查詢車號
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+  }
+  async function searchCarNumber (): Promise<void> {
+    const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
-    const { license_plate } = form.value
+    const { license_plate } = searchForm.value
 
     const payload = {
       license_plate,
@@ -204,11 +225,12 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
         console.log('data', data)
-      // storeInfo.value = data[0]
+        // storeInfo.value = data[0]
+        searchFormRef.value?.reset()
       } else {
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`
@@ -240,27 +262,26 @@
   }
 
   // 選擇折抵時數
-  function selectedHours (hours) {
+  function selectedHours (hours: number): void {
     console.log('選擇折抵時數', hours)
   }
 
   // 折抵停車時數
-  function onDeduction () {
+  function onDeduction (): void {
     console.log('選擇折抵時數')
   }
 
   // 關閉表單
-  function onCloseForm () {
+  function onCloseForm (): void {
     emits('close-form')
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
-    delParkingConfirm()
   }
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 </script>

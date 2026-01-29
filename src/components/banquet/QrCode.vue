@@ -315,42 +315,60 @@
     />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
+  import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
   import { onMounted, ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
   import { formatDate } from '@/utils/date'
 
   // Props
-  const props = defineProps({
-    activeTab: {
-      type: Object,
-      default: () => ({}),
-    },
-    vendorId: {
-      type: Number,
-      required: true,
-    },
+  interface Props {
+    activeTab?: TabItem
+    vendorId?: number
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: Object as () => TabItem,
   })
-  const emits = defineEmits(['close-form'])
-  const BaseUrl = import.meta.env.VITE_API_DOMAIN
+  const emits = defineEmits<{
+    'close-form': []
+  }>()
+  const BaseUrl = import.meta.env.VITE_BASE_URL
 
   const loading = ref(false)
 
   // Prompt Message Dialog
-  const messageDialog = ref(false)
-  const messageTitle = ref('')
-  const message = ref('')
-  const isConfirmBtn = ref(false)
+  const messageDialog = ref<boolean>(false)
+  const messageTitle = ref<string>('')
+  const message = ref<string>('')
+  const isConfirmBtn = ref<boolean>(false)
 
-  const currentStatus = ref('')
+  const currentStatus = ref<string>('')
   // QrCode 列表
-  const qrCodeList = ref([])
+  interface QrCodeItem {
+    id: string
+    disabled: boolean
+    startDate: string
+    title: string
+  }
+  const qrCodeList = ref<QrCodeItem[]>([])
 
   // qrCodeForm
-  const qrCodeFormRef = ref()
-  const qrCodeForm = ref({
+  const qrCodeFormRef = ref<InstanceType<typeof VForm> | null>(null)
+  interface QrCodeForm {
+    banquet_name: string
+    banquet_start: string
+    startHour: string | null
+    startMinute: string | null
+    startSecond: string
+    banquet_end: string
+    endHour: string | null
+    endMinute: string | null
+    endSecond: string
+    count: number | null
+  }
+  const qrCodeForm = ref<QrCodeForm>({
     banquet_name: '',
     banquet_start: '',
     startHour: null,
@@ -362,7 +380,14 @@
     endSecond: '00',
     count: null,
   })
-  const rules = ref({
+
+  interface Rules {
+    nameRules: Array<(v: string) => boolean | string>
+    countRule: Array<(v: number | null) => boolean | string>
+    startDateRule: Array<(v: string) => boolean | string>
+    endDateRule: Array<(v: string) => boolean | string>
+  }
+  const rules = ref<Rules>({
     nameRules: [
       v => !!v || '請輸入宴會名稱',
     ],
@@ -393,26 +418,35 @@
     ],
   })
 
-  const countList = ref([
+  interface CountItem {
+    id: string
+    value: number
+    title: string
+  }
+  const countList: CountItem[] = [
     { id: 'p01', value: 1, title: '1 小時' },
     { id: 'p02', value: 2, title: '2 小時' },
     { id: 'p01', value: 3, title: '3 小時' },
-  ])
+  ]
+
   // 時間選項
-  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
-  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
-  const seconds = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
+  interface TimeItem {
+    id: string
+    title: string
+  }
+  const hours: TimeItem[] = Array.from({ length: 24 }, (_, i) => ({ id: String(i).padStart(2, '0'), title: String(i).padStart(2, '0') }))
+  const minutes: TimeItem[] = Array.from({ length: 60 }, (_, i) => ({ id: String(i).padStart(2, '0'), title: String(i).padStart(2, '0') }))
+  const seconds: TimeItem[] = Array.from({ length: 60 }, (_, i) => ({ id: String(i).padStart(2, '0'), title: String(i).padStart(2, '0') }))
 
-  // Fake qrCode list
-  // const qrCodeListRef = ref([
-  //   { id: 'p01', disabled: false, startDate: '2025-10-01', title: '王林府喜宴' },
-  //   { id: 'p02', disabled: false, startDate: '2025-10-01', title: 'AIT 餐會' },
-  //   { id: 'p01', disabled: true, startDate: '2025-10-01', title: 'YMCA 餐會' },
-  //   { id: 'p02', disabled: false, startDate: '2025-10-01', title: '林王府喜宴' },
-  // ])
-  const currentItem = ref({})
+  const currentItem = ref<QrCodeItem | null>(null)
 
-  async function fetchQrCodeList () {
+  // 取得 QrCode 列表
+  interface ApiResponse<T = any> {
+    returnCode: number
+    message: string
+    data?: T
+  }
+  async function fetchQrCodeList (): Promise<void> {
     const payload = {
       vendorId: props.vendorId,
     }
@@ -420,10 +454,9 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/select_qr?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
+      const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
-        console.log('data', data)
         qrCodeList.value = data[0]
       } else {
         messageTitle.value = '訊息通知'
@@ -439,25 +472,25 @@
     }
   }
 
-  onMounted(async () => {
+  onMounted(async (): Promise<void> => {
     await fetchQrCodeList()
   })
 
   // 開啟 Qr Code 視窗
-  function openQrCode (qrCode) {
+  function openQrCode (qrCode: QrCodeItem): void {
     currentItem.value = qrCode
     currentStatus.value = 'showQRCode'
     console.log('currentItem', currentItem.value)
   }
 
   // 新增 QrCode
-  function setQrCode () {
+  function setQrCode (): void {
     currentStatus.value = 'addQrCode'
   }
 
   // 送出新增表單
-  async function addQrCodeConfirm () {
-    const { valid } = await qrCodeFormRef.value.validate()
+  async function addQrCodeConfirm (): Promise<void> {
+    const { valid } = await qrCodeFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
     const {
@@ -476,7 +509,6 @@
     const startDateTime = `${formatDate(banquet_start)} ${startHour}:${startMinute}:${startSecond}`
     const endDateTime = `${formatDate(banquet_end)} ${endHour}:${endMinute}:${endSecond}`
 
-    console.log('送出表單', qrCodeForm.value, startDateTime, endDateTime)
     const payload = {
       vendorId: props.vendorId,
       banquet_name,
@@ -489,10 +521,9 @@
     loading.value = true
     const apiUrl = '/member/grand_hotel/create_qr?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
-      const res = await api.post(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
+      const res = await api.post<ApiResponse>(apiUrl, payload)
+      const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
-        console.log('data', data)
         await fetchQrCodeList()
         currentStatus.value = 'showQRCode'
       } else {
@@ -509,16 +540,16 @@
   }
 
   // 關閉表單
-  function onCloseForm () {
+  function onCloseForm (): void {
     emits('close-form')
   }
 
   // 確認 message
-  function messageConfirm () {
+  function messageConfirm (): void {
     messageDialog.value = false
   }
   // 離開 message
-  function messageClose () {
+  function messageClose (): void {
     messageDialog.value = false
   }
 </script>

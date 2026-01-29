@@ -19,7 +19,7 @@
               <span v-else class="text-h3">{{ storeInfo?.remainPoints }}</span>
             </v-avatar>
           </div>
-          <v-form ref="formRef">
+          <v-form ref="searchFormRef">
             <v-row dense>
               <v-col cols="12">
                 <v-text-field
@@ -168,8 +168,8 @@
 <script setup lang="ts">
   import type { TabItem } from '@/utils/site.ts'
   import { onMounted, ref } from 'vue'
+  import { VForm } from 'vuetify/components'
   import api from '@/api'
-  import PromptDialog from '@/components/PromptDialog.vue'
 
   interface ApiResponse<T = any> {
     returnCode: number
@@ -220,7 +220,7 @@
   const canDeduction = ref<boolean>(false)
 
   // carNumber 查詢
-  const formRef = ref<any>()
+  const searchFormRef = ref<InstanceType<typeof VForm> | null>(null)
   interface Form {
     license_plate: string
   }
@@ -300,7 +300,7 @@
 
   // 入場資訊查詢
   async function searchCarNumber (): Promise<void> {
-    const { valid } = await formRef.value.validate()
+    const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
     const { license_plate } = form.value
@@ -389,7 +389,7 @@
       if (returnCode === 0) {
         // 初始化資料
         await getStore()
-        formRef.value.reset()
+        searchFormRef.value?.reset()
         carInfo.value = {}
         discountList.value = []
         selectedHour.value = null
