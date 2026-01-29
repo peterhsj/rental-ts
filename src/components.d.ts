@@ -29,7 +29,6 @@ declare module 'vue' {
     QrCode: typeof import('./components/banquet/QrCode.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    SearchForm: typeof import('./components/banquet/SearchForm.vue')['default']
     SelfCheckinForm: typeof import('./components/counter/SelfCheckinForm.vue')['default']
     ShopSearchForm: typeof import('./components/shop/ShopSearchForm.vue')['default']
     TabList: typeof import('./components/TabList.vue')['default']

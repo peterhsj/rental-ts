@@ -30,10 +30,10 @@
       />
     </v-container>
     <!-- 折抵 qrCode -->
-    <v-container v-if="activeTab?.value === 'qrCode'" id="qrCode" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'qrCode' && memberInfo" id="qrCode" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <QrCode
         :active-tab="activeTab"
-        :vendor-id="memberInfo && memberInfo.vendorId"
+        :vendor-id="memberInfo.vendorId"
         @close-form="closeParkingDeduction"
       />
     </v-container>
@@ -74,12 +74,6 @@
   import type { TabItem } from '@/utils/site.ts'
   import { onMounted, onUnmounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  // import QrCode from '@/components/banquet/QrCode.vue'
-  // import SearchForm from '@/components/banquet/SearchForm.vue'
-  // import ChangePassword from '@/components/ChangePassword.vue'
-  // import Logout from '@/components/Logout.vue'
-  // import PromptDialog from '@/components/PromptDialog.vue'
-  // import TabList from '@/components/TabList.vue'
   import { banquetList } from '@/utils/site.ts'
 
   interface MemberInfo {
