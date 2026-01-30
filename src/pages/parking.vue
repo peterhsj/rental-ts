@@ -289,6 +289,7 @@
   function messageConfirm (): void {
     parkingForm.value.ischeck = 1
     sendParkingForm()
+    messageDialog.value = false
   }
   // 離開 message
   function messageClose (): void {

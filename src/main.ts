@@ -15,7 +15,7 @@ import App from './App.vue'
 
 // Styles
 import 'unfonts.css'
-import './assets/css/custom.min.css'
+import './assets/scss/custom.scss'
 
 const app = createApp(App)
 

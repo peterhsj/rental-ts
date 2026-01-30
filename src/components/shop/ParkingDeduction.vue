@@ -23,7 +23,7 @@
             <v-row dense>
               <v-col cols="12">
                 <v-text-field
-                  v-model="form.license_plate"
+                  v-model="searchForm.license_plate"
                   autocomplete="off"
                   bg-color="white"
                   class="pr-0"
@@ -33,7 +33,7 @@
                   required
                   :rules="rules.carRules"
                   variant="outlined"
-                  @input="form.license_plate = form.license_plate.toUpperCase()"
+                  @input="searchForm.license_plate = searchForm.license_plate.toUpperCase()"
                 >
                   <template #append-inner>
                     <v-btn
@@ -221,10 +221,10 @@
 
   // carNumber 查詢
   const searchFormRef = ref<InstanceType<typeof VForm> | null>(null)
-  interface Form {
+  interface SearchForm {
     license_plate: string
   }
-  const form = ref<Form>({
+  const searchForm = ref<SearchForm>({
     license_plate: '',
   })
 
@@ -303,7 +303,7 @@
     const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
-    const { license_plate } = form.value
+    const { license_plate } = searchForm.value
 
     const payload = {
       license_plate,
@@ -377,7 +377,7 @@
     const payload = {
       vendorId: storeInfo.value?.vendorId,
       store_type: storeInfo.value?.store_type,
-      license_plate: form.value.license_plate,
+      license_plate: searchForm.value.license_plate,
       count: selectedHour.value,
     }
     // 送出表單

@@ -13,8 +13,8 @@ import Layouts from 'vite-plugin-vue-layouts-next'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: '/RentalDemo/',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'development' ? '/' : '/RentalDemo/',
   plugins: [
     VueRouter({
       dts: 'src/typed-router.d.ts',
@@ -109,4 +109,4 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-})
+}))
