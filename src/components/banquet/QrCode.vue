@@ -22,7 +22,7 @@
           <v-row v-if="qrCodeList.length > 0">
             <v-col
               v-for="item in qrCodeList"
-              :key="item.id"
+              :key="item.qrId"
               cols="12"
               md="3"
               sm="6"
@@ -46,10 +46,10 @@
                 </div>
                 <div class="my-2">
                   <p class="py-1 text-h6 font-weight-regular">
-                    {{ item.startDate }}
+                    {{ item.banquet_start }}
                   </p>
                   <p class="text-h6 font-weight-regular">
-                    {{ item.title }}
+                    {{ item.banquet_name }}
                   </p>
                 </div>
               </v-card>
@@ -61,28 +61,25 @@
         <v-card v-if="currentStatus === 'showQRCode'" class="mt-5 pa-2 rounded-lg flex-grow-1 overflow-y-auto" variant="flat">
           <!-- <div> -->
           <div class="ma-6 d-flex flex-column align-center justify-center">
-            <span>
-              <v-img
-                alt="icon"
-                color="black"
-                cover
-                height="200"
-                :src="`${BaseUrl}/images/qrcode.svg`"
-                width="200"
+            <span v-if="currentItem?.banquet_qr">
+              <QrcodeVue
+                :size="200"
+                :value="currentItem.banquet_qr"
               />
             </span>
             <div class="my-6 d-flex flex-column align-center justify-center">
               <p class="py-6 text-h5 font-weight-bold">
-                王林府喜宴
+                {{ currentItem?.banquet_name }}
               </p>
               <p class="text-h5 font-weight-bold">
                 有效日期
               </p>
               <p class="text-h5 font-weight-regular">
-                2025-10-01 23:30
+                {{ currentItem?.banquet_end }}
               </p>
               <p class="py-6 text-h5 font-weight-bold">
-                折抵小時數 3
+                折抵小時數
+                {{ currentItem?.count }}
               </p>
             </div>
           </div>
@@ -318,6 +315,7 @@
 <script setup lang="ts">
   import type { TabItem } from '@/utils/site.ts'
   import { isAfter, isBefore } from 'date-fns'
+  import QrcodeVue from 'qrcode.vue'
   import { onMounted, ref } from 'vue'
   import { VForm } from 'vuetify/components'
   import api from '@/api'
@@ -347,10 +345,13 @@
   const currentStatus = ref<string>('')
   // QrCode 列表
   interface QrCodeItem {
-    id: string
+    qrId: string
     disabled: boolean
-    startDate: string
-    title: string
+    banquet_start: string
+    banquet_end: string
+    banquet_name: string
+    banquet_qr: string
+    count: number
   }
   const qrCodeList = ref<QrCodeItem[]>([])
 
@@ -440,7 +441,7 @@
 
   const currentItem = ref<QrCodeItem | null>(null)
 
-  // 取得 QrCode 列表
+  // 宴會廳折抵登記QR查詢
   interface ApiResponse<T = any> {
     returnCode: number
     message: string
@@ -457,7 +458,7 @@
       const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data } = res
       if (returnCode === 0) {
-        qrCodeList.value = data[0]
+        qrCodeList.value = data
       } else {
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`

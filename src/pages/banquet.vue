@@ -30,7 +30,7 @@
       />
     </v-container>
     <!-- 折抵 qrCode -->
-    <v-container v-if="activeTab?.value === 'qrCode' && memberInfo" id="qrCode" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
+    <v-container v-if="activeTab?.value === 'qrCode' && memberInfo?.vendorId" id="qrCode" class="rental rental__wrapper flex-grow-1 overflow-y-hidden">
       <QrCode
         :active-tab="activeTab"
         :vendor-id="memberInfo.vendorId"
