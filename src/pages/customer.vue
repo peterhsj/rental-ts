@@ -15,7 +15,7 @@
               <v-row dense>
                 <v-col cols="12">
                   <v-text-field
-                    v-model="searchForm.carNumber"
+                    v-model="searchForm.license_plate"
                     autocomplete="off"
                     bg-color="white"
                     class="pr-0"
@@ -25,7 +25,7 @@
                     required
                     :rules="rules.carRules"
                     variant="outlined"
-                    @input="searchForm.carNumber = searchForm.carNumber.toUpperCase()"
+                    @input="searchForm.license_plate = searchForm.license_plate.toUpperCase()"
                   >
                     <template #append-inner>
                       <v-btn
@@ -127,6 +127,7 @@
   import { onMounted, onUnmounted, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { VForm } from 'vuetify/components'
+  import api from '@/api'
 
   const BaseUrl = import.meta.env.VITE_BASE_URL
   const router = useRouter()
@@ -189,13 +190,13 @@
   const message = ref<string>('')
   const isConfirmBtn = ref<boolean>(false)
 
-  // carNumber 查詢
+  // 車號查詢
   const searchFormRef = ref<InstanceType<typeof VForm> | null>(null)
   interface SearchForm {
-    carNumber: string
+    license_plate: string
   }
   const searchForm = ref<SearchForm>({
-    carNumber: '',
+    license_plate: '',
   })
 
   interface Rules {
@@ -229,19 +230,37 @@
 
   // 查詢表單
   async function searchCarNumber (): Promise<void> {
-    console.log('送出表單', searchForm.value.carNumber)
+    console.log('送出表單', searchForm.value.license_plate)
     const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
-    const { carNumber } = searchForm.value
+    const { license_plate } = searchForm.value
 
-    parkingList.value = [{
-      id: 'p01',
-      phoneNumber: '',
-      carNumber: 'ABC-1234',
-      startDate: '2025-10-01 12:30:29',
-      endDate: '2025-10-01',
-    }]
+    const payload = {
+      license_plate,
+    }
+    console.log('payload', payload)
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post<ApiResponse>(apiUrl, payload)
+      const { returnCode, message: returnMsg, data } = res
+      if (returnCode === 0) {
+        console.log('data', data)
+        // storeInfo.value = data[0]
+        searchFormRef.value?.reset()
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
 
     // 正常狀況下
     // const newParking = {
