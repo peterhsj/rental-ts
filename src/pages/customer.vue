@@ -6,7 +6,7 @@
         <div class="px-4 py-3 d-flex align-center bg-orange-lighten-5">
           <v-avatar :image="`${BaseUrl}/images/check.svg`" size="40" />
           <span class="ml-3 text-h6 font-weight-bold text-grey-darken-2">
-            折抵 松鶴會館
+            {{ decodedParams.vn }}
           </span>
         </div>
         <v-container class="pb-2 d-flex flex-column flex-grow-1 overflow-y-auto" style="height: calc(100% - 64px);">
@@ -125,14 +125,64 @@
 </template>
 <script setup lang="ts">
   import { onMounted, onUnmounted, ref } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import { VForm } from 'vuetify/components'
 
   const BaseUrl = import.meta.env.VITE_BASE_URL
   const router = useRouter()
-
+  const route = useRoute()
   const isMobile = ref<boolean>(false)
 
+  // 取得 URL 查詢參數
+  interface QueryParams {
+    c?: string // Base64 編碼的參數
+    v?: string // Base64 編碼的參數
+    vn?: string // Base64 編碼的參數 (venue name)
+  }
+
+  // 解碼 Base64
+  function decodeBase64 (str: string): string {
+    try {
+      const text = atob(str)
+      const bytes = Uint8Array.from(text, c => c.codePointAt(0) ?? 0)
+      return new TextDecoder().decode(bytes)
+    } catch (error) {
+      console.error('Base64 解碼錯誤:', error)
+      return str
+    }
+  }
+
+  // 取得並解碼查詢參數
+  const queryParams = ref<QueryParams>({})
+  const decodedParams = ref<{
+    c?: number
+    v?: number
+    vn?: string
+  }>({})
+
+  function getQueryParams (): void {
+    queryParams.value = {
+      c: route.query.c as string, // 時數
+      v: route.query.v as string, // 商家
+      vn: route.query.vn as string, // 商家名稱
+    }
+
+    // 解碼參數
+    if (queryParams.value.c) {
+      decodedParams.value.c = Number(decodeBase64(queryParams.value.c))
+    }
+    if (queryParams.value.v) {
+      decodedParams.value.v = Number(decodeBase64(queryParams.value.v))
+    }
+    if (queryParams.value.vn) {
+      decodedParams.value.vn = decodeBase64(queryParams.value.vn)
+    }
+
+    // console.log('原始參數:', queryParams.value)
+    // console.log('解碼後參數:', decodedParams.value)
+  }
+
+  const loading = ref<boolean>(false)
   // Prompt Message Dialog
   const messageDialog = ref<boolean>(false)
   const messageTitle = ref<string>('')
@@ -182,7 +232,7 @@
     console.log('送出表單', searchForm.value.carNumber)
     const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
-    if (!valid) return;
+    if (!valid) return
     const { carNumber } = searchForm.value
 
     parkingList.value = [{
@@ -242,6 +292,7 @@
   onMounted((): void => {
     checkIsMobile()
     window.addEventListener('resize', checkIsMobile)
+    getQueryParams() // 取得 URL 參數
   })
 
   onUnmounted((): void => {
