@@ -52,105 +52,105 @@
             </v-row>
           </v-form>
           <!-- 入場資訊 -->
-          <v-card
-            v-if="carInfo && carInfo.license_plate"
-            class="py-5 px-2 rounded-lg bg-blue-darken-3 text-center"
-            variant="flat"
-          >
-            <p>入場資訊</p>
-            <p class="py-2 text-h6 font-weight-bold">
-              {{ carInfo.license_plate }}
-            </p>
-            <p>{{ carInfo.arrival_time }}</p>
-          </v-card>
-          <!-- 繳費資訊 -->
-          <v-card
-            v-if="carInfo && carInfo.license_plate"
-            class="mt-5 pa-2 d-flex flex-column align-center rounded-lg bordered border-md bg-white"
-            variant="outlined"
-          >
-            <p class="my-4 text-h6">應繳金額</p>
-            <p class="my-1">
-              <span class="mr-1">NT$</span>
-              <span class="text-h3 font-weight-bold">
-                {{ carInfo.paymentAmount }}
-              </span>
-            </p>
-            <p class="my-4 text-h6">
-              {{ storeInfo?.slipStyle === 20 ? '當次折抵' : '折抵時數' }}
-            </p>
-            <div class="ma-4 d-flex align-center justify-space-around w-100">
-              <template v-if="storeInfo?.slipStyle === 18 || storeInfo?.slipStyle === 19">
+          <div v-if="parkingList">
+            <v-card
+              class="mt-3 py-5 px-2 rounded-lg bg-blue-darken-3 text-center"
+              variant="flat"
+            >
+              <p>入場資訊</p>
+              <p class="py-2 text-h6 font-weight-bold">
+                {{ parkingList.license_plate }}
+              </p>
+              <p>{{ parkingList.arrival_time }}</p>
+            </v-card>
+            <!-- 繳費資訊 -->
+            <v-card
+              class="mt-5 pa-2 d-flex flex-column align-center rounded-lg bordered border-md bg-white"
+              variant="outlined"
+            >
+              <p class="my-4 text-h6">應繳金額</p>
+              <p class="my-1">
+                <span class="mr-1">NT$</span>
+                <span class="text-h3 font-weight-bold">
+                  {{ parkingList.paymentAmount }}
+                </span>
+              </p>
+              <p class="my-4 text-h6">
+                {{ storeInfo?.slipStyle === 20 ? '當次折抵' : '折抵時數' }}
+              </p>
+              <div class="ma-4 d-flex align-center justify-space-around w-100">
+                <template v-if="storeInfo?.slipStyle === 18 || storeInfo?.slipStyle === 19">
+                  <v-btn
+                    v-for="(hourItem, index) in slipHours"
+                    :key="index"
+                    class="my-2 mx-1 px-4 text-none rounded-pill"
+                    :color="selectedHour === hourItem ? 'blue-lighten-1' : 'blue-darken-3'"
+                    :disabled="parkingList.ischeck !== 0 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints < 1)"
+                    height="40"
+                    type="button"
+                    variant="flat"
+                    @click="selectedHours(hourItem)"
+                  >
+                    {{ hourItem }} hr
+                  </v-btn>
+                </template>
                 <v-btn
-                  v-for="(hourItem, index) in slipHours"
-                  :key="index"
+                  v-if="storeInfo?.slipStyle === 19 || storeInfo?.slipStyle === 20"
                   class="my-2 mx-1 px-4 text-none rounded-pill"
-                  :color="selectedHour === hourItem ? 'blue-lighten-1' : 'blue-darken-3'"
-                  :disabled="carInfo.ischeck !== 0 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints < 1)"
+                  :color="selectedHour === 24 ? 'blue-lighten-1' : 'blue-darken-3'"
+                  :disabled="parkingList.ischeck !== 0"
                   height="40"
                   type="button"
                   variant="flat"
-                  @click="selectedHours(hourItem)"
+                  @click="selectedHours(24)"
                 >
-                  {{ hourItem }} hr
+                  24 hr
                 </v-btn>
-              </template>
-              <v-btn
-                v-if="storeInfo?.slipStyle === 19 || storeInfo?.slipStyle === 20"
-                class="my-2 mx-1 px-4 text-none rounded-pill"
-                :color="selectedHour === 24 ? 'blue-lighten-1' : 'blue-darken-3'"
-                :disabled="carInfo.ischeck !== 0"
-                height="40"
-                type="button"
-                variant="flat"
-                @click="selectedHours(24)"
-              >
-                24 hr
-              </v-btn>
-            </div>
+              </div>
 
-            <div class="mt-3 d-flex flex-wrap justify-center w-100">
-              <v-btn
-                v-if="carInfo.ischeck === 0 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints > 0)"
-                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
-                color="red-darken-1"
-                height="40"
-                variant="flat"
-                @click="onDeduction"
-              >
-                折抵
-              </v-btn>
-              <v-btn
-                v-else
-                class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
-                color="blue-darken-3"
-                height="40"
-                variant="flat"
-                @click="onCloseForm"
-              >
-                回上一頁
-              </v-btn>
-            </div>
+              <div class="mt-3 d-flex flex-wrap justify-center w-100">
+                <v-btn
+                  v-if="parkingList.ischeck === 0 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints > 0)"
+                  class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
+                  color="red-darken-1"
+                  height="40"
+                  variant="flat"
+                  @click="onDeduction"
+                >
+                  折抵
+                </v-btn>
+                <v-btn
+                  v-else
+                  class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
+                  color="blue-darken-3"
+                  height="40"
+                  variant="flat"
+                  @click="onCloseForm"
+                >
+                  回上一頁
+                </v-btn>
+              </div>
 
-            <!-- 明細 -->
-            <v-card
-              v-if="discountList.length > 0"
-              class="my-2 pa-3 rounded-lg bg-grey-lighten-4 w-100"
-              variant="flat"
-            >
-              <v-row dense>
-                <template v-for="(item, index) in discountList" :key="index">
-                  <v-col class="text-grey-darken-1" cols="8">
-                    {{ item.vendor_name }}
-                  </v-col>
-                  <v-col class="text-grey-darken-1" cols="4">
-                    {{ item.amount }}
-                    {{ item.store_type === 1 || item.store_type === 5 ? 'hr' : 'NT$' }}
-                  </v-col>
-                </template>
-              </v-row>
+              <!-- 明細 -->
+              <v-card
+                v-if="discountList.length > 0"
+                class="my-2 pa-3 rounded-lg bg-grey-lighten-4 w-100"
+                variant="flat"
+              >
+                <v-row dense>
+                  <template v-for="(item, index) in discountList" :key="index">
+                    <v-col class="text-grey-darken-1" cols="8">
+                      {{ item.vendor_name }}
+                    </v-col>
+                    <v-col class="text-grey-darken-1" cols="4">
+                      {{ item.amount }}
+                      {{ item.store_type === 1 || item.store_type === 5 ? 'hr' : 'NT$' }}
+                    </v-col>
+                  </template>
+                </v-row>
+              </v-card>
             </v-card>
-          </v-card>
+          </div>
         </div>
       </v-container>
     </v-card>
@@ -228,20 +228,20 @@
     license_plate: '',
   })
 
-  interface CarInfo {
+  interface ParkingInfo {
     license_plate?: string
     arrival_time?: string
     paymentAmount?: number
     ischeck?: number
   }
-  const carInfo = ref<CarInfo | null>(null)
+  const parkingList = ref<ParkingInfo | null>(null)
 
-  interface DiscountItem {
+  interface DiscountInfo {
     vendor_name: string
     amount: number
     store_type: number
   }
-  const discountList = ref<DiscountItem[]>([])
+  const discountList = ref<DiscountInfo[]>([])
 
   interface Rules {
     carRules: Array<(v: string) => boolean | string>
@@ -301,6 +301,10 @@
 
   // 入場資訊查詢
   async function searchCarNumber (): Promise<void> {
+    // 重設資料
+    parkingList.value = null
+    discountList.value = []
+
     const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
@@ -317,7 +321,7 @@
       const res = await api.post<ApiResponse>(apiUrl, payload)
       const { returnCode, message: returnMsg, data, discount } = res
       if (returnCode === 0) {
-        carInfo.value = data
+        parkingList.value = data
         discountList.value = discount
         // canDeduction.value = data.ischeck === 0
         if (data.ischeck !== 0) {
@@ -371,7 +375,7 @@
         // 初始化資料
         await getStore()
         searchFormRef.value?.reset()
-        carInfo.value = null
+        parkingList.value = null
         discountList.value = []
         selectedHour.value = null
         // canDeduction.value = false

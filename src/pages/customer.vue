@@ -217,7 +217,7 @@
     arrival_time: string // 入場時間
     license_plate: string // 車號
     paymentAmount: number // 應付金額
-    ischeck: number // 是否已折抵 0 | 1
+    ischeck: number // 是否已折抵 0: 可折抵 | 1: 已進行折抵，不能再折抵 | 2: 已達折抵上限，不能再折抵
   }
   const parkingList = ref<ParkingInfo | null>(null)
 
@@ -237,6 +237,10 @@
 
   // 入場資訊查詢
   async function searchCarNumber (): Promise<void> {
+    // 重設資料
+    parkingList.value = null
+    discountList.value = []
+
     const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
