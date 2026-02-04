@@ -67,7 +67,7 @@
                 <v-btn
                   class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular text-white"
                   color="light-green-darken-2"
-                  :disabled="parkingList.ischeck === 1"
+                  :disabled="parkingList.ischeck !== 0"
                   height="60"
                   min-width="200"
                   variant="flat"
@@ -135,13 +135,6 @@
   const route = useRoute()
   const isMobile = ref<boolean>(false)
 
-  // 取得 URL 查詢參數
-  interface QueryParams {
-    c?: string // Base64 編碼的參數
-    v?: string // Base64 編碼的參數
-    vn?: string // Base64 編碼的參數 (venue name)
-  }
-
   // 解碼 Base64
   function decodeBase64 (str: string): string {
     try {
@@ -154,14 +147,22 @@
     }
   }
 
-  // 取得並解碼查詢參數
+  // 取得 URL 查詢參數
+  interface QueryParams {
+    c?: string // Base64 編碼的參數
+    v?: string // Base64 編碼的參數
+    vn?: string // Base64 編碼的參數 (venue name)
+  }
+  // 原始參數
   const queryParams = ref<QueryParams>({})
+  // 解碼後參數
   const decodedParams = ref<{
     c?: number
     v?: number
     vn?: string
   }>({})
 
+  // 取得並解碼查詢參數
   function getQueryParams (): void {
     queryParams.value = {
       c: route.query.c as string, // 時數
@@ -179,9 +180,6 @@
     if (queryParams.value.vn) {
       decodedParams.value.vn = decodeBase64(queryParams.value.vn)
     }
-
-    // console.log('原始參數:', queryParams.value)
-    // console.log('解碼後參數:', decodedParams.value)
   }
 
   const loading = ref<boolean>(false)
@@ -256,7 +254,12 @@
       if (returnCode === 0) {
         parkingList.value = data
         discountList.value = discount
-        // searchFormRef.value?.reset()
+        if (data.ischeck !== 0) {
+          messageTitle.value = '訊息通知'
+          message.value = data.ischeck === 1 ? `${license_plate} 已進行住宿折抵，無法再折抵` : `${license_plate} 折抵已到達上限，無法再折抵`
+          isConfirmBtn.value = false
+          messageDialog.value = true
+        }
       } else {
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`
@@ -268,12 +271,6 @@
     } finally {
       loading.value = false
     }
-
-    // 折抵已經超過上限
-    // messageDialog.value = true
-    // messageTitle.value = '折抵已經超過上限'
-    // message.value = `AXN-1234 已當次折抵過，已無法再進行折抵。`
-    // isConfirmBtn.value = false
   }
 
   // 停車折抵
@@ -291,7 +288,10 @@
       console.log({ res })
       const { returnCode, message: returnMsg } = res
       if (returnCode === 0) {
-        messageTitle.value = '訊息通知'
+        parkingList.value = null
+        discountList.value = []
+        searchFormRef.value?.reset()
+        // 通知訊息
         message.value = `${returnMsg}`
         isConfirmBtn.value = false
         messageDialog.value = true

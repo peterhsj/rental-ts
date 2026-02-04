@@ -86,7 +86,7 @@
                   :key="index"
                   class="my-2 mx-1 px-4 text-none rounded-pill"
                   :color="selectedHour === hourItem ? 'blue-lighten-1' : 'blue-darken-3'"
-                  :disabled="carInfo.ischeck === 1 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints < 1)"
+                  :disabled="carInfo.ischeck !== 0 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints < 1)"
                   height="40"
                   type="button"
                   variant="flat"
@@ -99,7 +99,7 @@
                 v-if="storeInfo?.slipStyle === 19 || storeInfo?.slipStyle === 20"
                 class="my-2 mx-1 px-4 text-none rounded-pill"
                 :color="selectedHour === 24 ? 'blue-lighten-1' : 'blue-darken-3'"
-                :disabled="carInfo.ischeck === 1"
+                :disabled="carInfo.ischeck !== 0"
                 height="40"
                 type="button"
                 variant="flat"
@@ -320,6 +320,12 @@
         carInfo.value = data
         discountList.value = discount
         // canDeduction.value = data.ischeck === 0
+        if (data.ischeck !== 0) {
+          messageTitle.value = '訊息通知'
+          message.value = data.ischeck === 1 ? `${license_plate} 已進行住宿折抵，無法再折抵` : `${license_plate} 折抵已到達上限，無法再折抵`
+          isConfirmBtn.value = false
+          messageDialog.value = true
+        }
       } else {
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`
@@ -331,36 +337,10 @@
     } finally {
       loading.value = false
     }
-
-  // parkingList.value = [{
-  //   id: 'p01',
-  //   phoneNumber: '',
-  //   carNumber: 'ABC-1234',
-  //   startDate: '2025-10-01 12:30:29',
-  //    endDate: '2025-10-01'
-  // }]
-
-  // 正常狀況下
-  // const newParking = {
-  //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
-  //   carNumber: carNumber,
-  //   startDate: formatDate(startDate),
-  //   endDate: formatDate(endDate)
-  // }
-  // console.log('送出表單', newParking)
-  // parkingList.value.push(newParking)
-  // checkinFormRef.value.reset()
-
-  // 折抵已經超過上限
-  // messageDialog.value = true
-  // messageTitle.value = '折抵已經超過上限'
-  // message.value = `AXN-1234 已當次折抵過，已無法再進行折抵。`
-  // isConfirmBtn.value = false
   }
 
   // 選擇折抵時數
   function selectedHours (hour: number): void {
-    // console.log('選擇折抵時數', hour)
     selectedHour.value = hour
   }
 
@@ -391,7 +371,7 @@
         // 初始化資料
         await getStore()
         searchFormRef.value?.reset()
-        carInfo.value = {}
+        carInfo.value = null
         discountList.value = []
         selectedHour.value = null
         // canDeduction.value = false
