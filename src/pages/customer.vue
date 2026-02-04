@@ -44,34 +44,36 @@
               </v-row>
             </v-form>
             <!-- 入場資訊 -->
-            <div v-if="parkingList.length > 0">
+            <div v-if="parkingList">
               <v-card
-                class="pa-2 rounded-lg bg-blue-darken-3 text-center"
+                class="py-5 px-2 rounded-lg bg-blue-darken-3 text-center"
                 variant="flat"
               >
                 <p class="py-2 text-h6 font-weight-regular">入場資訊</p>
-                <p class="py-2 text-h5 font-weight-bold">AXN-1234</p>
-                <p>2025-10-01 12:30:29</p>
+                <p class="py-2 text-h5 font-weight-bold">
+                  {{ parkingList.license_plate }}
+                </p>
+                <p>{{ parkingList.arrival_time }}</p>
               </v-card>
               <!-- 繳費資訊 -->
               <div class="mt-5 d-flex flex-column align-center justify-center">
                 <p class="my-4 text-h6">應繳金額</p>
                 <p class="my-1">
                   <span class="mr-1">NT$</span>
-                  <span class="text-h3 font-weight-bold">150</span>
+                  <span class="text-h3 font-weight-bold">{{ parkingList.paymentAmount }}</span>
                 </p>
               </div>
               <div class="mt-3 d-flex flex-wrap justify-center w-100">
                 <v-btn
                   class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular text-white"
                   color="light-green-darken-2"
-                  :disabled="!canDeduction"
+                  :disabled="parkingList.ischeck === 1"
                   height="60"
                   min-width="200"
                   variant="flat"
                   @click="onDeduction"
                 >
-                  折抵 2 小時
+                  折抵 {{ decodedParams.c }} 小時
                 </v-btn>
               </div>
               <div class="mt-3 d-flex flex-wrap justify-center w-100">
@@ -89,22 +91,21 @@
               </div>
               <!-- 明細 -->
               <v-card
+                v-if="discountList.length > 0"
                 class="my-5 pa-3 rounded-lg bg-grey-lighten-4 w-100"
                 variant="flat"
               >
                 <v-row dense>
-                  <v-col class="text-grey-darken-1" cols="8">
-                    花園咖啡廳
-                  </v-col>
-                  <v-col class="text-grey-darken-1" cols="4">
-                    2 hr
-                  </v-col>
-                  <v-col class="text-grey-darken-1" cols="8">
-                    民歌西餐廳
-                  </v-col>
-                  <v-col class="text-grey-darken-1" cols="4">
-                    2 hr
-                  </v-col>
+                  <template v-for="(item, index) in discountList" :key="index">
+                    <v-col class="text-grey-darken-1" cols="8">
+                      {{ item.vendor_name }}
+                    </v-col>
+                    <v-col class="text-grey-darken-1" cols="4">
+                      {{ item.store_type === 2 ? '$' : '' }}
+                      {{ item.amount }}
+                      {{ item.store_type === 1 || item.store_type === 5 ? 'hr' : '' }}
+                    </v-col>
+                  </template>
                 </v-row>
               </v-card>
             </div>
@@ -209,28 +210,34 @@
     ],
   })
 
-  const canDeduction = ref<boolean>(true)
+  // const canDeduction = ref<boolean>(true)
   const canPayment = ref<boolean>(true)
 
   // parking list
   interface ParkingInfo {
-    id: string
-    phoneNumber: string
-    carNumber: string
-    startDate: string
-    endDate: string
+    arrival_time: string // 入場時間
+    license_plate: string // 車號
+    paymentAmount: number // 應付金額
+    ischeck: number // 是否已折抵 0 | 1
   }
-  const parkingList = ref<ParkingInfo[]>([])
+  const parkingList = ref<ParkingInfo | null>(null)
+
+  interface DiscountInfo {
+    vendor_name: string
+    amount: number
+    store_type: number
+  }
+  const discountList = ref<DiscountInfo[]>([])
 
   interface ApiResponse<T = any> {
     returnCode: number
     message: string
     data?: T
+    discount?: T
   }
 
-  // 查詢表單
+  // 入場資訊查詢
   async function searchCarNumber (): Promise<void> {
-    console.log('送出表單', searchForm.value.license_plate)
     const { valid } = await searchFormRef.value?.validate() ?? { valid: false }
     // 檢核欄位
     if (!valid) return
@@ -239,17 +246,16 @@
     const payload = {
       license_plate,
     }
-    console.log('payload', payload)
     // 送出表單
     loading.value = true
     const apiUrl = '/member/grand_hotel/car_in_park_sel?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
     try {
       const res = await api.post<ApiResponse>(apiUrl, payload)
-      const { returnCode, message: returnMsg, data } = res
+      const { returnCode, message: returnMsg, data, discount } = res
       if (returnCode === 0) {
-        console.log('data', data)
-        // storeInfo.value = data[0]
-        searchFormRef.value?.reset()
+        parkingList.value = data
+        discountList.value = discount
+        // searchFormRef.value?.reset()
       } else {
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`
@@ -261,17 +267,6 @@
     } finally {
       loading.value = false
     }
-
-    // 正常狀況下
-    // const newParking = {
-    //   id: `p${String(parkingList.value.length + 1).padStart(2, '0')}`,
-    //   carNumber: carNumber,
-    //   startDate: formatDate(startDate),
-    //   endDate: formatDate(endDate)
-    // }
-    // console.log('送出表單', newParking)
-    // parkingList.value.push(newParking)
-    // checkinFormRef.value.reset()
 
     // 折抵已經超過上限
     // messageDialog.value = true
@@ -294,9 +289,6 @@
   // 確認 message
   function messageConfirm (): void {
     messageDialog.value = false
-    // isInfo.value = true
-    // infoStatus.value = 'success'
-    // initForm()
   }
   // 離開 message
   function messageClose (): void {

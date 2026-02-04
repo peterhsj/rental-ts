@@ -54,7 +54,7 @@
           <!-- 入場資訊 -->
           <v-card
             v-if="carInfo && carInfo.license_plate"
-            class="pa-2 rounded-lg bg-blue-darken-3 text-center"
+            class="py-5 px-2 rounded-lg bg-blue-darken-3 text-center"
             variant="flat"
           >
             <p>入場資訊</p>
