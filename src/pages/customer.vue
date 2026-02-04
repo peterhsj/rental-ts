@@ -15,7 +15,7 @@
               <v-row dense>
                 <v-col cols="12">
                   <v-text-field
-                    v-model="searchForm.license_plate"
+                    v-model.trim="searchForm.license_plate"
                     autocomplete="off"
                     bg-color="white"
                     class="pr-0"
@@ -206,6 +206,7 @@
   const rules = ref<Rules>({
     carRules: [
       v => !!v || '車號為必填',
+      v => !/[-]/.test(v) || '車號不需輸入 - 符號',
       // v => /^[A-Z]{1}[0-9A-Z]{3,4}$/.test(v) || '請輸入有效的車號'
     ],
   })
@@ -275,13 +276,44 @@
     // isConfirmBtn.value = false
   }
 
-  function onDeduction (): void {
-    messageDialog.value = true
-    messageTitle.value = '折抵成功'
-    message.value = `AXN-1234 已成功折抵 2 小時，感謝您的使用！`
-    isConfirmBtn.value = true
+  // 停車折抵
+  async function onDeduction (): Promise<void> {
+    const payload = {
+      license_plate: parkingList.value?.license_plate,
+      count: decodedParams.value.c,
+      vendorId: decodedParams.value.v,
+    }
+    // 送出表單
+    loading.value = true
+    const apiUrl = '/member/grand_hotel/register_qr?bQz0fX8f=4ApR34x2wb2CVTNUfsq3'
+    try {
+      const res = await api.post<ApiResponse>(apiUrl, payload)
+      console.log({ res })
+      const { returnCode, message: returnMsg } = res
+      if (returnCode === 0) {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      } else {
+        messageTitle.value = '訊息通知'
+        message.value = `${returnMsg}`
+        isConfirmBtn.value = false
+        messageDialog.value = true
+      }
+    } catch (error) {
+      console.log({ err: error })
+    } finally {
+      loading.value = false
+    }
+
+    // messageDialog.value = true
+    // messageTitle.value = '折抵成功'
+    // message.value = `AXN-1234 已成功折抵 2 小時，感謝您的使用！`
+    // isConfirmBtn.value = true
   }
 
+  // 線上繳費
   function onlinePayment (): void {
     router.push('/Customer')
   }
