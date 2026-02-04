@@ -13,7 +13,7 @@
           <v-row dense>
             <v-col cols="12">
               <v-text-field
-                v-model="searchForm.license_plate"
+                v-model.trim="searchForm.license_plate"
                 autocomplete="off"
                 bg-color="white"
                 class="pr-0"
@@ -192,7 +192,8 @@
   const rules = ref<Rules>({
     carRules: [
       v => !!v || '車號為必填',
-      v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
+      v => !/[-]/.test(v) || '車號不需輸入 - 符號',
+      // v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )'
     ],
   })
   const loading = ref<boolean>(false)

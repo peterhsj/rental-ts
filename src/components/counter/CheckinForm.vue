@@ -13,7 +13,7 @@
           <v-row class="flex-0-1" dense>
             <v-col cols="12" md="4">
               <v-text-field
-                v-model="checkinForm.license_plate"
+                v-model.trim="checkinForm.license_plate"
                 autocomplete="off"
                 bg-color="white"
                 color="blue-darken-2"
@@ -186,7 +186,8 @@
   const rules = ref<Rules>({
     carRules: [
       v => !!v || '車號為必填',
-      v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )',
+      v => !/[-]/.test(v) || '車號不需輸入 - 符號',
+      // v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )'
     ],
     startDateRule: [
       v => !!v || '請選擇起始日期',

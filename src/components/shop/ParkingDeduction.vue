@@ -23,7 +23,7 @@
             <v-row dense>
               <v-col cols="12">
                 <v-text-field
-                  v-model="searchForm.license_plate"
+                  v-model.trim="searchForm.license_plate"
                   autocomplete="off"
                   bg-color="white"
                   class="pr-0"
@@ -86,7 +86,7 @@
                   :key="index"
                   class="my-2 mx-1 px-4 text-none rounded-pill"
                   :color="selectedHour === hourItem ? 'blue-lighten-1' : 'blue-darken-3'"
-                  :disabled="!canDeduction || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints < 1)"
+                  :disabled="carInfo.ischeck === 1 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints < 1)"
                   height="40"
                   type="button"
                   variant="flat"
@@ -99,7 +99,7 @@
                 v-if="storeInfo?.slipStyle === 19 || storeInfo?.slipStyle === 20"
                 class="my-2 mx-1 px-4 text-none rounded-pill"
                 :color="selectedHour === 24 ? 'blue-lighten-1' : 'blue-darken-3'"
-                :disabled="!canDeduction"
+                :disabled="carInfo.ischeck === 1"
                 height="40"
                 type="button"
                 variant="flat"
@@ -111,7 +111,7 @@
 
             <div class="mt-3 d-flex flex-wrap justify-center w-100">
               <v-btn
-                v-if="canDeduction || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints > 0)"
+                v-if="carInfo.ischeck === 0 || (storeInfo?.remainPoints !== undefined && storeInfo?.remainPoints > 0)"
                 class="my-2 px-8 w-100 w-sm-auto rounded-lg text-h6 font-weight-regular"
                 color="red-darken-1"
                 height="40"
@@ -217,7 +217,7 @@
   const isConfirmBtn = ref<boolean>(false)
 
   const loading = ref<boolean>(false)
-  const canDeduction = ref<boolean>(false)
+  // const canDeduction = ref<boolean>(false)
 
   // carNumber 查詢
   const searchFormRef = ref<InstanceType<typeof VForm> | null>(null)
@@ -249,6 +249,7 @@
   const rules = ref<Rules>({
     carRules: [
       v => !!v || '車號為必填',
+      v => !/[-]/.test(v) || '車號不需輸入 - 符號',
     // v => /^[A-Z0-9]+-[A-Z0-9]+$/.test(v) || '請輸入有效的車號 ( 需包含 - 符號 )'
     ],
   })
@@ -318,7 +319,7 @@
       if (returnCode === 0) {
         carInfo.value = data
         discountList.value = discount
-        canDeduction.value = data.ischeck === 0
+        // canDeduction.value = data.ischeck === 0
       } else {
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`
@@ -393,7 +394,7 @@
         carInfo.value = {}
         discountList.value = []
         selectedHour.value = null
-        canDeduction.value = false
+        // canDeduction.value = false
         // 通知訊息
         messageTitle.value = '訊息通知'
         message.value = `${returnMsg}`
