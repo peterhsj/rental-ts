@@ -98,7 +98,6 @@
                   v-if="storeInfo?.slipStyle === 19 || storeInfo?.slipStyle === 20"
                   class="my-2 mx-1 px-4 text-none rounded-pill"
                   :color="selectedHour === 24 ? 'blue-lighten-1' : 'blue-darken-3'"
-                  :disabled="parkingList.ischeck !== 0"
                   height="40"
                   type="button"
                   variant="flat"
